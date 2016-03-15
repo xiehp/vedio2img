@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import uk.co.caprica.vlcj.component.DirectMediaPlayerComponent;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
+import uk.co.caprica.vlcj.player.MediaPlayer;
 import uk.co.caprica.vlcj.player.direct.BufferFormat;
 import uk.co.caprica.vlcj.player.direct.BufferFormatCallback;
 import uk.co.caprica.vlcj.player.direct.DirectMediaPlayer;
@@ -33,22 +34,26 @@ import uk.co.caprica.vlcj.player.direct.RenderCallback;
 import uk.co.caprica.vlcj.player.direct.RenderCallbackAdapter;
 import uk.co.caprica.vlcj.player.direct.format.RV32BufferFormat;
 import uk.co.caprica.vlcjinfo.MediaInfo;
+import xie.common.utils.XWaitChange;
 import xie.v2i.utils.CImage;
-import xie.v2i.utils.XWaitChange;
 
 public class MeidaLoador {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
-	private static final int width = 1920;
+	private JFrame frame;
 
-	private static final int height = 1080;
+	private JPanel videoSurface;
 
-	private final JFrame frame;
+	private BufferedImage image;
 
-	private final JPanel videoSurface;
+	private DirectMediaPlayerComponent mediaPlayerComponent;
 
-	private final BufferedImage image;
+	private int width = 1280;
+
+	private int height = 720;
+
+	private long totalTime = 0;
 
 	private int paintComponent = 0;
 	private int onDisplay = 0;
@@ -60,7 +65,10 @@ public class MeidaLoador {
 	private long 校准真实时间 = 0;
 	private long 校准视频时间 = 0;
 
-	private final DirectMediaPlayerComponent mediaPlayerComponent;
+	/** 视频是否已经载入 */
+	private boolean isVideoLoaded = false;
+	/** 视频是否已经停止播放 (初始认为非停止状态，所以应该在视频载入后才能判断该值) */
+	private boolean isDoStopActionFlg = false;;
 
 	private XWaitChange xWaitChange = new XWaitChange(0, 5000);
 
@@ -81,6 +89,17 @@ public class MeidaLoador {
 	}
 
 	public MeidaLoador(String mrl) {
+		init(mrl, 1280, 720);
+	}
+
+	public MeidaLoador(String mrl, int width, int height) {
+		init(mrl, width, height);
+	}
+
+	public void init(String mrl, int width, int height) {
+		this.width = width;
+		this.height = height;
+
 		frame = new JFrame("Direct Media Player");
 		frame.setBounds(100, 100, width, height);
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -155,7 +174,35 @@ public class MeidaLoador {
 			protected RenderCallback onGetRenderCallback() {
 				return new TutorialRenderCallbackAdapter();
 			}
+
+			@Override
+			public void mediaDurationChanged(MediaPlayer mediaPlayer, long newDuration) {
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						totalTime = newDuration;
+					}
+				});
+			}
+
+			@Override
+			public void stopped(MediaPlayer mediaPlayer) {
+				super.stopped(mediaPlayer);
+
+				isDoStopActionFlg = true;
+			}
+
+			@Override
+			public void paused(MediaPlayer mediaPlayer) {
+				super.paused(mediaPlayer);
+			}
+
+			@Override
+			public void playing(MediaPlayer mediaPlayer) {
+				super.playing(mediaPlayer);
+			}
 		};
+
 		frame.setVisible(true);
 		mediaPlayerComponent.getMediaPlayer().playMedia(mrl);
 	}
@@ -178,9 +225,10 @@ public class MeidaLoador {
 
 			Graphics2D g2 = (Graphics2D) g;
 			g2.drawImage(image, null, 0, 0);
-			g2.fillRect(0, 0, 40, 40);
+			g2.fillRect(0, 0, 200, 100);
 			g2.setColor(Color.white);
-			g2.drawString(paintComponent + "", 10, 10);
+			g2.drawString("paintComponent: " + paintComponent, 10, 10);
+			g2.drawString("onDisplay: " + onDisplay, 10, 20);
 			g2.drawString(String.valueOf(mediaPlayerComponent.getMediaPlayer().getTime()), 10, 20);
 
 			try {
@@ -205,6 +253,7 @@ public class MeidaLoador {
 		protected void onDisplay(DirectMediaPlayer mediaPlayer, int[] rgbBuffer) {
 			// Simply copy buffer to the image and repaint
 			++onDisplay;
+			isVideoLoaded = true;
 			// System.out.println("onDisplay" + onDisplay);
 
 			long nowTime = mediaPlayerComponent.getMediaPlayer().getTime();
@@ -217,7 +266,7 @@ public class MeidaLoador {
 				long dif视频时间 = nowTime - 校准视频时间;
 				if (dif真实时间 - dif视频时间 > 500 || dif真实时间 - dif视频时间 < -500) {
 
-					logger.info("dif真实时间 :{}, dif视频时间{}: ", dif真实时间, dif视频时间);
+					logger.debug("dif真实时间 :{}, dif视频时间{}: ", dif真实时间, dif视频时间);
 
 					校准真实时间 = new Date().getTime();
 					校准视频时间 = nowTime;
@@ -247,10 +296,20 @@ public class MeidaLoador {
 		}
 	}
 
-	public void saveImage() {
+	public File saveImage() {
 		long time = mediaPlayerComponent.getMediaPlayer().getTime();
 		logger.debug("saveImage time: {}", time);
-		CImage.saveImage(image, time, new File("D:\\work\\temp\\bbb"));
+		File file = CImage.saveImage(image, time, new File("D:\\work\\temp\\bbb"));
+		return file;
+	}
+
+	public long getTime() {
+		long time = mediaPlayerComponent.getMediaPlayer().getTime();
+		return time;
+	}
+
+	public BufferedImage getBufferedImage() {
+		return image;
 	}
 
 	public void pause() {
@@ -268,11 +327,46 @@ public class MeidaLoador {
 		setTime(time);
 	}
 
-	public boolean isRefreshedAfterChangeTime() {
-		return xWaitChange.isChanged();
+	public boolean isRefreshedAfterChangeTime(long time) {
+		return xWaitChange.isChanged(time);
 	}
 
 	public void setShowVideo(boolean showAnimeFlg) {
 		this.showAnimeFlg = showAnimeFlg;
+	}
+
+	public boolean isPlaying() {
+		return mediaPlayerComponent.getMediaPlayer().isPlaying();
+	}
+
+	public long getTotalTime() {
+		return totalTime;
+	}
+
+	public void stop() {
+		mediaPlayerComponent.getMediaPlayer().stop();
+	}
+
+	/**
+	 * 初始认为非停止状态，所以应该在视频载入后才能判断该值
+	 * 
+	 * @return
+	 */
+	public boolean isDoStopAction() {
+		return isDoStopActionFlg;
+	}
+
+	public boolean isVideoLoaded() {
+		return isVideoLoaded;
+	}
+
+	public void release() {
+		mediaPlayerComponent.release();
+		isVideoLoaded = false;
+	}
+
+	public void dispose() {
+		frame.dispose();
+		isVideoLoaded = false;
 	}
 }

@@ -4,6 +4,7 @@
 		<groupId>xie</groupId>
 		<artifactId>video2img-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../video2img-parent</relativePath>
 	</parent>
 	<artifactId>video2img-core</artifactId>
 	<name>video2img-core</name>
@@ -22,23 +23,31 @@
 	</properties>
 
 	<dependencies>
+		<!-- 本项目 -->
+		<dependency>
+			<groupId>xie</groupId>
+			<artifactId>video2img-config</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>xie</groupId>
 			<artifactId>xcommon</artifactId>
 			<version>1.0.0</version>
 		</dependency>
-	
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.10</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.10</version>
-        </dependency>
-        
+		<dependency>
+			<groupId>xie</groupId>
+			<artifactId>tietuku-api</artifactId>
+			<version>0.0.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+		</dependency>
+
 
 		<dependency>
 			<groupId>uk.co.caprica</groupId>

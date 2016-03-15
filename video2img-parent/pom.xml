@@ -18,4 +18,30 @@
 
 		<!-- 主要依赖库的版本定义 -->
 	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- junit-io -->
+			<dependency>
+				<groupId>io.spring.platform</groupId>
+				<artifactId>platform-bom</artifactId>
+				<version>2.0.2.RELEASE</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			
+			<!-- 本项目 -->
+			<dependency>
+				<groupId>xie</groupId>
+				<artifactId>video2img-config</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>xie</groupId>
+				<artifactId>video2img-core</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 </project>
