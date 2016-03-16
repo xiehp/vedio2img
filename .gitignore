@@ -12,9 +12,9 @@
 hs_err_pid*
 
 
-
 .classpath
 .project
-*.prefs
-*/target/classes/*
-*/.settings/*
+MANIFEST.MF
+/*/target
+/*/.settings
+/*/logs

@@ -21,7 +21,7 @@ public class Video2ImageProperties {
 	public final static String RUN_MODE_SPECIAL = "1";
 
 	/** 运行模式 */
-	public String runMode = RUN_MODE_INTERVAL;;
+	public String runMode = RUN_MODE_INTERVAL;
 
 	public int width = 1280;
 
