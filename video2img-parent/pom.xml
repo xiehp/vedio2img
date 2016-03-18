@@ -49,4 +49,18 @@
 		</dependencies>
 	</dependencyManagement>
 
+	<build>
+		<plugins>
+			<!-- 定义使用jdk编译版本 UTF-8编译 -->
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>${java.version}</source>
+					<target>${java.version}</target>
+					<encoding>${project.build.sourceEncoding}</encoding>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>
