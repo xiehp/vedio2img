@@ -4,6 +4,7 @@
 		<groupId>xie</groupId>
 		<artifactId>video2img-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../video2img-parent</relativePath>
 	</parent>
 	<artifactId>video2img-config</artifactId>
 	<name>video2img-config</name>

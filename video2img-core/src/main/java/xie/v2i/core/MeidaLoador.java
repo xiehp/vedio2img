@@ -96,7 +96,7 @@ public class MeidaLoador {
 		init(mrl, width, height);
 	}
 
-	public void init(String mrl, int width, int height) {
+	public void init(final String mrl, final int width, final int height) {
 		this.width = width;
 		this.height = height;
 
@@ -176,7 +176,7 @@ public class MeidaLoador {
 			}
 
 			@Override
-			public void mediaDurationChanged(MediaPlayer mediaPlayer, long newDuration) {
+			public void mediaDurationChanged(final MediaPlayer mediaPlayer, final long newDuration) {
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {

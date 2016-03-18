@@ -6,6 +6,11 @@
 	<packaging>pom</packaging>
 	<name>video2img-parent</name>
 
+	<modules>
+		<module>../video2img-config</module>
+		<module>../video2img-core</module>
+	</modules>
+
 	<properties>
 		<!-- 编译时的编码 -->
 		<maven.compiler.encoding>UTF-8</maven.compiler.encoding>
