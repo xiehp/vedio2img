@@ -24,6 +24,8 @@ import org.apache.log4j.BasicConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sun.jna.Memory;
+
 import uk.co.caprica.vlcj.component.DirectMediaPlayerComponent;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
 import uk.co.caprica.vlcj.player.MediaPlayer;
@@ -55,8 +57,10 @@ public class MeidaLoador {
 
 	private long totalTime = 0;
 
+	// 测试参数
 	private int paintComponent = 0;
 	private int onDisplay = 0;
+	private int display = 0;
 
 	private boolean showAnimeFlg = true;
 
@@ -70,7 +74,11 @@ public class MeidaLoador {
 	/** 视频是否已经停止播放 (初始认为非停止状态，所以应该在视频载入后才能判断该值) */
 	private boolean isDoStopActionFlg = false;;
 
-	private XWaitChange xWaitChange = new XWaitChange(0, 5000);
+	/** 判断视频帧是否已经改变或者超时 */
+	private XWaitChange xWaitChange = new XWaitChange(0, 10000);
+
+	/** 视频帧是否已经可用 */
+	private boolean isOnDisplayFlg = false;
 
 	public static void main(final String[] args) {
 		BasicConfigurator.configure();
@@ -229,7 +237,8 @@ public class MeidaLoador {
 			g2.setColor(Color.white);
 			g2.drawString("paintComponent: " + paintComponent, 10, 10);
 			g2.drawString("onDisplay: " + onDisplay, 10, 20);
-			g2.drawString(String.valueOf(mediaPlayerComponent.getMediaPlayer().getTime()), 10, 20);
+			g2.drawString("display: " + display, 10, 30);
+			g2.drawString(String.valueOf(mediaPlayerComponent.getMediaPlayer().getTime()), 10, 40);
 
 			try {
 				// if (!ImageIO.write(image, "jpg", new File("D:\\work\\temp\\"
@@ -248,6 +257,13 @@ public class MeidaLoador {
 
 		private TutorialRenderCallbackAdapter() {
 			super(new int[width * height]);
+		}
+
+		@Override
+		public void display(DirectMediaPlayer mediaPlayer, Memory[] nativeBuffer, BufferFormat bufferFormat) {
+			super.display(mediaPlayer, nativeBuffer, bufferFormat);
+
+			++display;
 		}
 
 		protected void onDisplay(DirectMediaPlayer mediaPlayer, int[] rgbBuffer) {
@@ -279,7 +295,11 @@ public class MeidaLoador {
 				logger.info("onDisplay nowTime: " + nowTime);
 			}
 
-			xWaitChange.isChanged(nowTime);
+			// xWaitChange.isChanged(nowTime);
+			if (xWaitChange.getPastTime() > 2000) {
+				isOnDisplayFlg = true;
+				logger.debug("isOnDisplayFlg: " + isOnDisplayFlg + "," + xWaitChange.getPastTime());
+			}
 
 			image.setRGB(0, 0, width, height, rgbBuffer, 0, width);
 
@@ -316,19 +336,20 @@ public class MeidaLoador {
 		mediaPlayerComponent.getMediaPlayer().pause();
 	}
 
-	public void setTime(long time) {
-		mediaPlayerComponent.getMediaPlayer().setTime(time);
-
-		xWaitChange.setCompareValue(time);
-	}
-
 	public void skip(long skipTime) {
 		long time = mediaPlayerComponent.getMediaPlayer().getTime() + skipTime;
 		setTime(time);
 	}
 
+	public void setTime(long time) {
+		mediaPlayerComponent.getMediaPlayer().setTime(time);
+
+		isOnDisplayFlg = false;
+		xWaitChange.setCompareValue(time);
+	}
+
 	public boolean isRefreshedAfterChangeTime(long time) {
-		return xWaitChange.isChanged(time);
+		return xWaitChange.isChanged(time) || isOnDisplayFlg;
 	}
 
 	public void setShowVideo(boolean showAnimeFlg) {

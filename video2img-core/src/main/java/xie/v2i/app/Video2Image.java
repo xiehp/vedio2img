@@ -37,74 +37,78 @@ public class Video2Image {
 	// /** 指定时间 */
 	// private long[] specifyTimes;
 
-	Video2ImageProperties video2ImageProperties = new Video2ImageProperties();
+	Video2ImageProperties config = new Video2ImageProperties();
 
 	private boolean isProcessing = false;
 
 	private boolean isProcessSuccess = false;
 
-	// mrl : G:\\video\\無彩限のファントム·ワールド 02.mp4
-
+	/**
+	 * @param mrl G:\\video\\無彩限のファントム·ワールド 02.mp4
+	 */
 	public Video2Image(String mrl) {
 		this.mrl = mrl;
 	}
 
+	/**
+	 * @param mrl G:\\video\\無彩限のファントム·ワールド 02.mp4
+	 */
 	public Video2Image(String mrl, Video2ImageListener video2ImageListener) {
 		this.mrl = mrl;
 		this.listener = video2ImageListener;
 	}
 
 	public Video2ImageProperties getVideo2ImageProperties() {
-		return video2ImageProperties;
+		return config;
 	}
 
 	public void setVideo2ImageProperties(Video2ImageProperties video2ImageProperties) {
-		this.video2ImageProperties = video2ImageProperties;
+		this.config = video2ImageProperties;
 	}
 
 	public String getRunMode() {
-		return video2ImageProperties.runMode;
+		return config.runMode;
 	}
 
 	public void setRunMode(String runMode) {
-		video2ImageProperties.runMode = runMode;
+		config.runMode = runMode;
 	}
 
 	public void setSize(int width, int height) {
-		video2ImageProperties.width = width;
-		video2ImageProperties.height = height;
+		config.width = width;
+		config.height = height;
 	}
 
 	public long getStartTime() {
-		return video2ImageProperties.startTime;
+		return config.startTime;
 	}
 
 	public void setStartTime(long startTime) {
-		video2ImageProperties.startTime = startTime;
+		config.startTime = startTime;
 	}
 
 	public long getEndTime() {
-		return video2ImageProperties.endTime;
+		return config.endTime;
 	}
 
 	public void setEndTime(long endTime) {
-		video2ImageProperties.endTime = endTime;
+		config.endTime = endTime;
 	}
 
 	public long getTimeInterval() {
-		return video2ImageProperties.timeInterval;
+		return config.timeInterval;
 	}
 
 	public void setTimeInterval(long timeInterval) {
-		video2ImageProperties.timeInterval = timeInterval;
+		config.timeInterval = timeInterval;
 	}
 
 	public long[] getSpecifyTimes() {
-		return video2ImageProperties.specifyTimes;
+		return config.specifyTimes;
 	}
 
 	public void setSpecifyTimes(long[] specifyTimes) {
-		video2ImageProperties.specifyTimes = specifyTimes;
+		config.specifyTimes = specifyTimes;
 	}
 
 	public void run() {
@@ -119,7 +123,7 @@ public class Video2Image {
 
 			public void run() {
 				try {
-					meidaLoador = new MeidaLoador(mrl, video2ImageProperties.width, video2ImageProperties.height);
+					meidaLoador = new MeidaLoador(mrl, config.width, config.height);
 
 					Thread thread = new Thread(new Runnable() {
 						public void run() {
@@ -128,10 +132,11 @@ public class Video2Image {
 								while (!meidaLoador.isVideoLoaded()) {
 									Thread.sleep(100);
 								}
+								Thread.sleep(2000);
 								meidaLoador.pause();
 								logger.debug("do meidaLoador.pause()");
 
-								XWaitTime xWaitTime = new XWaitTime(3000);
+								XWaitTime xWaitTime = new XWaitTime(20000);
 								while (!meidaLoador.isDoStopAction()) {
 									if (xWaitTime.isTimeout()) {
 										break;
@@ -140,14 +145,14 @@ public class Video2Image {
 									Thread.sleep(100);
 								}
 
-								long time = video2ImageProperties.startTime;
-								if (Video2ImageProperties.RUN_MODE_INTERVAL.equals(video2ImageProperties.runMode)) {
-									time = video2ImageProperties.startTime;
-								} else if (Video2ImageProperties.RUN_MODE_SPECIAL.equals(video2ImageProperties.runMode)) {
+								long time = config.startTime;
+								if (Video2ImageProperties.RUN_MODE_INTERVAL.equals(config.runMode)) {
+									time = config.startTime;
+								} else if (Video2ImageProperties.RUN_MODE_SPECIAL.equals(config.runMode)) {
 									// 指定第一个
-									time = video2ImageProperties.specifyTimes[0];
+									time = config.specifyTimes[0];
 								} else {
-									time = video2ImageProperties.startTime;
+									time = config.startTime;
 								}
 
 								int totalTimeCount = 0;
@@ -160,29 +165,38 @@ public class Video2Image {
 									while (true) {
 										if (meidaLoador.isRefreshedAfterChangeTime(time)) {
 											// meidaLoador.saveImage();
-											listener.setTotalTime(meidaLoador.getTotalTime());
-											listener.isRefreshedAfterChangeTime(meidaLoador.getTime(), meidaLoador.getBufferedImage());
+											if (listener != null) {
+												listener.setTotalTime(meidaLoador.getTotalTime());
+												try {
+													listener.isRefreshedAfterChangeTime(meidaLoador.getTime(), meidaLoador.getBufferedImage());
+												} catch (Exception e) {
+													throw e;
+												}
+											} else {
+												// 测试用
+												Thread.sleep(2000);
+											}
 											break;
 										}
 										Thread.sleep(100);
 									}
 
-									if (Video2ImageProperties.RUN_MODE_SPECIAL.equals(video2ImageProperties.runMode)) {
+									if (Video2ImageProperties.RUN_MODE_SPECIAL.equals(config.runMode)) {
 										// 判断是否是最后一个指定时间
-										if (video2ImageProperties.specifyTimes.length <= runCount + 1) {
+										if (config.specifyTimes.length <= runCount + 1) {
 											// 截图循环结束
 											break;
 										}
 
 										// 指定下一个
-										time = video2ImageProperties.specifyTimes[runCount + 1];
-									} else if (Video2ImageProperties.RUN_MODE_INTERVAL.equals(video2ImageProperties.runMode)) {
+										time = config.specifyTimes[runCount + 1];
+									} else if (Video2ImageProperties.RUN_MODE_INTERVAL.equals(config.runMode)) {
 										// 下一个时间
-										time += video2ImageProperties.timeInterval;
+										time += config.timeInterval;
 
-										if (video2ImageProperties.endTime > 0) {
+										if (config.endTime > 0) {
 											// 判断下一个时间是否超出结束时间
-											if (time > video2ImageProperties.endTime) {
+											if (time > config.endTime) {
 												// 截图循环结束
 												break;
 											}
@@ -205,11 +219,9 @@ public class Video2Image {
 								closeMediaLoader();
 
 							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
 								e.printStackTrace();
 								closeMediaLoader();
 							} catch (Exception e) {
-								// TODO Auto-generated catch block
 								e.printStackTrace();
 								closeMediaLoader();
 							}
@@ -219,7 +231,6 @@ public class Video2Image {
 					thread.start();
 
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 					closeMediaLoader();
 				}
@@ -247,6 +258,7 @@ public class Video2Image {
 
 	public void closeMediaLoader() {
 		// meidaLoador.stop();
+		logger.info("closeMediaLoader");
 		meidaLoador.release();
 		meidaLoador.dispose();
 		isProcessing = false;
