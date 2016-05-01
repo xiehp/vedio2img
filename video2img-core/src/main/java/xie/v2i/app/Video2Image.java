@@ -168,7 +168,7 @@ public class Video2Image {
 											if (listener != null) {
 												listener.setTotalTime(meidaLoador.getTotalTime());
 												try {
-													listener.isRefreshedAfterChangeTime(meidaLoador.getTime(), meidaLoador.getBufferedImage());
+													listener.isRefreshedAfterChangeTime(time, meidaLoador.getTime(), meidaLoador.getBufferedImage());
 												} catch (Exception e) {
 													throw e;
 												}

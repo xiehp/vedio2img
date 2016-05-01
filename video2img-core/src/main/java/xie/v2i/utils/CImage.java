@@ -11,13 +11,19 @@ import org.slf4j.LoggerFactory;
 public class CImage {
 	private final static Logger logger = LoggerFactory.getLogger(CImage.class);
 
-	public static File getFilePath(long militime, File folder) {
-		File file = new File(folder, militime + ".jpg");
+	public static File getFilePath(Object fileName, File folder) {
+		String imageFileName = fileName.toString();
+		if (!imageFileName.toLowerCase().endsWith(".jpg")) {
+			imageFileName = imageFileName + ".jpg";
+		}
+		//imageFileName = imageFileName.replace("  ", "_");
+		imageFileName = imageFileName.replace("?", "_");
+		File file = new File(folder, imageFileName);
 		return file;
 	}
 
-	public static File saveImage(BufferedImage image, long militime, File folder) {
-		File filePath = getFilePath(militime, folder);
+	public static File saveImage(BufferedImage image, Object fileName, File folder) {
+		File filePath = getFilePath(fileName, folder);
 
 		return saveImage(image, filePath);
 	}

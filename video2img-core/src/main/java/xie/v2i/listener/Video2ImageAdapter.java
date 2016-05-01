@@ -6,8 +6,7 @@ public class Video2ImageAdapter implements Video2ImageListener {
 	private long totalTime;
 
 	@Override
-	public void isRefreshedAfterChangeTime(long time, BufferedImage image) {
-
+	public void isRefreshedAfterChangeTime(long setTime, long originalTime, BufferedImage image) {
 	}
 
 	@Override

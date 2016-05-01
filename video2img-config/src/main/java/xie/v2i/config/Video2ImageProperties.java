@@ -1,7 +1,6 @@
 package xie.v2i.config;
 
 public class Video2ImageProperties {
-	
 
 	public final static String KEY_runMode = "runMode";
 	public final static String KEY_width = "width";
@@ -13,29 +12,28 @@ public class Video2ImageProperties {
 
 	public final static String KEY_id = "id";
 	public final static String KEY_forceUpload = "forceUpload";
-	
-	
-	/** ÔËĞĞÄ£Ê½ ¶¨Ê±¼ä¸ô */
+
+	/** è¿è¡Œæ¨¡å¼ å®šæ—¶é—´éš” */
 	public final static String RUN_MODE_INTERVAL = "0";
-	/** ÔËĞĞÄ£Ê½ Ö¸¶¨Ê±¼ä */
+	/** è¿è¡Œæ¨¡å¼ æŒ‡å®šæ—¶é—´ */
 	public final static String RUN_MODE_SPECIAL = "1";
 
-	/** ÔËĞĞÄ£Ê½ */
+	/** è¿è¡Œæ¨¡å¼ */
 	public String runMode = RUN_MODE_INTERVAL;
 
 	public int width = 1280;
 
 	public int height = 720;
 
-	/** ¿ªÊ¼Ê±¼ä */
+	/** å¼€å§‹æ—¶é—´ */
 	public long startTime = 0;
 
-	/** ¿ªÊ¼Ê±¼ä */
+	/** å¼€å§‹æ—¶é—´ */
 	public long endTime = 0;
 
-	/** Ê±¼ä¼ä¸ô */
+	/** æ—¶é—´é—´éš” */
 	public long timeInterval = 60000;
 
-	/** Ö¸¶¨Ê±¼ä */
+	/** æŒ‡å®šæ—¶é—´ */
 	public long[] specifyTimes;
 }

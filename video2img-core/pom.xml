@@ -26,12 +26,12 @@
 		<!-- 本项目 -->
 		<dependency>
 			<groupId>xie</groupId>
-			<artifactId>video2img-config</artifactId>
+			<artifactId>xcommon</artifactId>
+			<version>1.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>xie</groupId>
-			<artifactId>xcommon</artifactId>
-			<version>1.0.0</version>
+			<artifactId>video2img-config</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>xie</groupId>
