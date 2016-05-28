@@ -3,10 +3,11 @@ package xie.v2i.utils;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
-import javax.imageio.ImageIO;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import xie.common.exception.XRuntimeException;
+import xie.common.image.XImageUtils;
 
 public class CImage {
 	private final static Logger logger = LoggerFactory.getLogger(CImage.class);
@@ -16,7 +17,7 @@ public class CImage {
 		if (!imageFileName.toLowerCase().endsWith(".jpg")) {
 			imageFileName = imageFileName + ".jpg";
 		}
-		//imageFileName = imageFileName.replace("  ", "_");
+		// imageFileName = imageFileName.replace(" ", "_");
 		imageFileName = imageFileName.replace("?", "_");
 		File file = new File(folder, imageFileName);
 		return file;
@@ -33,19 +34,17 @@ public class CImage {
 			if (!filePath.getParentFile().exists()) {
 				filePath.getParentFile().mkdirs();
 			}
-
-			if (!ImageIO.write(image, "jpg", filePath)) {
-				// System.out.println(militime + ".jpg");
-				logger.debug(filePath.getAbsolutePath());
-				filePath = null;
-			}
+			XImageUtils.writeWithQuality(image, "jpeg", filePath, 0.86f);
+			// if (!ImageIO.write(image, "jpeg", filePath)) {
+			// logger.debug("文件保存失败, " + filePath.getAbsolutePath());
+			// filePath = null;
+			// }
 
 			return filePath;
 		} catch (Exception e) {
-			logger.error(filePath.getAbsolutePath());
-			e.printStackTrace();
+			logger.error("文件保存失败, " + filePath.getAbsolutePath());
+			throw new XRuntimeException(e);
 		}
 
-		return null;
 	}
 }

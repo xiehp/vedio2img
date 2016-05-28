@@ -47,7 +47,8 @@ public class MeidaLoador {
 
 	private JPanel videoSurface;
 
-	private BufferedImage image;
+	private BufferedImage bufferedImage;
+	private int[] rgbBuffer_test;
 
 	private DirectMediaPlayerComponent mediaPlayerComponent;
 
@@ -57,28 +58,29 @@ public class MeidaLoador {
 
 	private long totalTime = 0;
 
-	// 测试参数
-	private int paintComponent = 0;
-	private int onDisplay = 0;
-	private int display = 0;
-
-	private boolean showAnimeFlg = true;
-
-	private long preTime = 0;
-
-	private long 校准真实时间 = 0;
-	private long 校准视频时间 = 0;
-
 	/** 视频是否已经载入 */
 	private boolean isVideoLoaded = false;
-	/** 视频是否已经停止播放 (初始认为非停止状态，所以应该在视频载入后才能判断该值) */
-	private boolean isDoStopActionFlg = false;;
+	/** 视频是否已经暂停播放 (初始认为非暂停状态，所以应该在视频载入后才能判断该值) */
+	private boolean isDoPauseActionFlg = false;;
 
 	/** 判断视频帧是否已经改变或者超时 */
 	private XWaitChange xWaitChange = new XWaitChange(0, 10000);
 
-	/** 视频帧是否已经可用 */
+	/** 视频帧是否已经可用    当前该判断用于是否超时 */
 	private boolean isOnDisplayFlg = false;
+
+	// 测试参数
+	private int paintComponent = 0;
+	private int onDisplay = 0;
+	private int display = 0;
+	private Date startTime;
+	private long 校准真实时间 = 0;
+	private long 校准视频时间 = 0;
+	private int mediaPlayerComponent_Display = 0;
+
+	private boolean showAnimeFlg = true;
+
+	private long preTime = 0;
 
 	public static void main(final String[] args) {
 		BasicConfigurator.configure();
@@ -107,6 +109,7 @@ public class MeidaLoador {
 	public void init(final String mrl, final int width, final int height) {
 		this.width = width;
 		this.height = height;
+		startTime = new Date();
 
 		frame = new JFrame("Direct Media Player");
 		frame.setBounds(100, 100, width, height);
@@ -163,15 +166,15 @@ public class MeidaLoador {
 		savePicButton.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				CImage.saveImage(image, mediaPlayerComponent.getMediaPlayer().getTime(), new File("D:\\work\\temp\\bbb"));
+				CImage.saveImage(bufferedImage, mediaPlayerComponent.getMediaPlayer().getTime(), new File("D:\\work\\temp\\bbb"));
 			}
 		});
+
 		videoSurface = new VideoSurfacePanel();
 		// frame.setContentPane(videoSurface);
 		frame.add(videoSurface, BorderLayout.CENTER);
-		image = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().createCompatibleImage(width, height);
+		bufferedImage = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().createCompatibleImage(width, height);
 		BufferFormatCallback bufferFormatCallback = new BufferFormatCallback() {
-
 			public BufferFormat getBufferFormat(int sourceWidth, int sourceHeight) {
 				return new RV32BufferFormat(width, height);
 			}
@@ -184,25 +187,32 @@ public class MeidaLoador {
 			}
 
 			@Override
+			public void display(DirectMediaPlayer mediaPlayer, Memory[] nativeBuffers, BufferFormat bufferFormat) {
+				super.display(mediaPlayer, nativeBuffers, bufferFormat);
+				mediaPlayerComponent_Display++;
+			}
+
+			@Override
 			public void mediaDurationChanged(final MediaPlayer mediaPlayer, final long newDuration) {
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						totalTime = newDuration;
-					}
-				});
+				// SwingUtilities.invokeLater(new Runnable() {
+				// @Override
+				// public void run() {
+				// totalTime = newDuration;
+				// }
+				// });
+
+				totalTime = newDuration;
 			}
 
 			@Override
 			public void stopped(MediaPlayer mediaPlayer) {
 				super.stopped(mediaPlayer);
 
-				isDoStopActionFlg = true;
 			}
 
 			@Override
 			public void paused(MediaPlayer mediaPlayer) {
-				super.paused(mediaPlayer);
+				isDoPauseActionFlg = true;
 			}
 
 			@Override
@@ -227,29 +237,55 @@ public class MeidaLoador {
 			setMaximumSize(new Dimension(width, height));
 		}
 
+		private int lineHeight = 0;
+		Graphics2D g2D;
+
+		private void drawStringLine(String value) {
+			g2D.drawString(value, 14, lineHeight);
+			lineHeight += 10;
+		}
+
 		protected void paintComponent(Graphics g) {
 			++paintComponent;
 			// System.out.println("paintComponent" + paintComponent);
 
-			Graphics2D g2 = (Graphics2D) g;
-			g2.drawImage(image, null, 0, 0);
-			g2.fillRect(0, 0, 200, 100);
-			g2.setColor(Color.white);
-			g2.drawString("paintComponent: " + paintComponent, 10, 10);
-			g2.drawString("onDisplay: " + onDisplay, 10, 20);
-			g2.drawString("display: " + display, 10, 30);
-			g2.drawString(String.valueOf(mediaPlayerComponent.getMediaPlayer().getTime()), 10, 40);
+			// 画图片
+			g2D = (Graphics2D) g;
+			g2D.drawImage(bufferedImage, null, 0, 0);
 
-			try {
-				// if (!ImageIO.write(image, "jpg", new File("D:\\work\\temp\\"
-				// + paintComponent + ".jpg"))) {
-				// System.out.println(paintComponent + ".jpg");
-				// }
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				System.out.println(paintComponent + ".jpg");
-				e.printStackTrace();
-			}
+			// 输出信息
+			g2D.fillRect(0, 0, 200, 300);
+			g2D.setColor(Color.white);
+			lineHeight = 0;
+			drawStringLine("totalTime: " + totalTime);
+			drawStringLine("宽高: " + width + "," + height);
+			drawStringLine("startTime: " + startTime);
+			drawStringLine("nowTime: " + new Date());
+
+			drawStringLine("paintComponent: " + paintComponent);
+			drawStringLine("onDisplay: " + onDisplay);
+			drawStringLine("display: " + display);
+			drawStringLine("getMediaPlayer().getTime(): " + mediaPlayerComponent.getMediaPlayer().getTime());
+			drawStringLine("preTime: " + preTime);
+			drawStringLine("xWaitChange.pastTime : " + xWaitChange.getPastTime());
+			drawStringLine("isRefreshedAfterChangeTime: " + isRefreshedAfterChangeTime(mediaPlayerComponent.getMediaPlayer().getTime()));
+			drawStringLine("isVideoLoaded: " + isVideoLoaded);
+			drawStringLine("校准真实时间: " + 校准真实时间);
+			drawStringLine("校准视频时间: " + 校准视频时间);
+			drawStringLine("rgbBuffer_test: " + rgbBuffer_test);
+			drawStringLine("bufferedImage: " + bufferedImage);
+			drawStringLine("mediaPlayerComponent_Display: " + mediaPlayerComponent_Display);
+
+			// try {
+			// // if (!ImageIO.write(image, "jpg", new File("D:\\work\\temp\\"
+			// // + paintComponent + ".jpg"))) {
+			// // System.out.println(paintComponent + ".jpg");
+			// // }
+			// } catch (Exception e) {
+			// // TODO Auto-generated catch block
+			// System.out.println(paintComponent + ".jpg");
+			// e.printStackTrace();
+			// }
 		}
 	}
 
@@ -290,28 +326,21 @@ public class MeidaLoador {
 			}
 
 			if (nowTime != preTime) {
-				// CImage.saveImage(image, mediaPlayerComponent.getMediaPlayer().getTime(), new File("D:\\work\\temp\\bbb"));
 				preTime = nowTime;
 				logger.info("onDisplay nowTime: " + nowTime);
 			}
 
 			// xWaitChange.isChanged(nowTime);
-			if (xWaitChange.getPastTime() > 2000) {
+			if (xWaitChange.getPastTime() > 10000) {
 				isOnDisplayFlg = true;
 				logger.debug("isOnDisplayFlg: " + isOnDisplayFlg + "," + xWaitChange.getPastTime());
 			}
 
-			image.setRGB(0, 0, width, height, rgbBuffer, 0, width);
+			bufferedImage.setRGB(0, 0, width, height, rgbBuffer, 0, width);
+			rgbBuffer_test = rgbBuffer;
 
 			if (showAnimeFlg) {
 				videoSurface.repaint();
-			}
-
-			try {
-				// Thread.sleep(30);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
 		}
 	}
@@ -319,7 +348,7 @@ public class MeidaLoador {
 	public File saveImage() {
 		long time = mediaPlayerComponent.getMediaPlayer().getTime();
 		logger.debug("saveImage time: {}", time);
-		File file = CImage.saveImage(image, time, new File("D:\\work\\temp\\bbb"));
+		File file = CImage.saveImage(bufferedImage, time, new File("D:\\work\\temp\\bbb"));
 		return file;
 	}
 
@@ -329,7 +358,7 @@ public class MeidaLoador {
 	}
 
 	public BufferedImage getBufferedImage() {
-		return image;
+		return bufferedImage;
 	}
 
 	public void pause() {
@@ -345,7 +374,7 @@ public class MeidaLoador {
 		mediaPlayerComponent.getMediaPlayer().setTime(time);
 
 		isOnDisplayFlg = false;
-		xWaitChange.setCompareValue(time);
+		xWaitChange.resetCompareValue(time);
 	}
 
 	public boolean isRefreshedAfterChangeTime(long time) {
@@ -369,12 +398,12 @@ public class MeidaLoador {
 	}
 
 	/**
-	 * 初始认为非停止状态，所以应该在视频载入后才能判断该值
+	 * 初始认为非暂停状态，所以应该在视频载入后才能判断该值
 	 * 
 	 * @return
 	 */
-	public boolean isDoStopAction() {
-		return isDoStopActionFlg;
+	public boolean isDoPauseAction() {
+		return isDoPauseActionFlg;
 	}
 
 	public boolean isVideoLoaded() {

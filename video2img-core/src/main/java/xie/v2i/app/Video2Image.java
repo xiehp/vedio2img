@@ -137,7 +137,7 @@ public class Video2Image {
 								logger.debug("do meidaLoador.pause()");
 
 								XWaitTime xWaitTime = new XWaitTime(20000);
-								while (!meidaLoador.isDoStopAction()) {
+								while (!meidaLoador.isDoPauseAction()) {
 									if (xWaitTime.isTimeout()) {
 										break;
 									}
@@ -157,13 +157,26 @@ public class Video2Image {
 
 								int totalTimeCount = 0;
 								int runCount = 0;
+
+								// 先随便指定一个时间
+								meidaLoador.setTime(2600);
+								Thread.sleep(500);
+								while (true) {
+									if (meidaLoador.isRefreshedAfterChangeTime(meidaLoador.getTime())) {
+										break;
+									}
+									Thread.sleep(100);
+								}
+								Thread.sleep(500);
+
+								// 开始截图
 								while (true) {
 									// 设置截图时间
 									meidaLoador.setTime(time);
 
 									// 进行截图
 									while (true) {
-										if (meidaLoador.isRefreshedAfterChangeTime(time)) {
+										if (meidaLoador.isRefreshedAfterChangeTime(meidaLoador.getTime())) {
 											// meidaLoador.saveImage();
 											if (listener != null) {
 												listener.setTotalTime(meidaLoador.getTotalTime());

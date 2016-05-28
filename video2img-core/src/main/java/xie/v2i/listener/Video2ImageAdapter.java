@@ -2,7 +2,7 @@ package xie.v2i.listener;
 
 import java.awt.image.BufferedImage;
 
-public class Video2ImageAdapter implements Video2ImageListener {
+public abstract class Video2ImageAdapter implements Video2ImageListener {
 	private long totalTime;
 
 	@Override
