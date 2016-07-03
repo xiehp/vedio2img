@@ -6,7 +6,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import xie.common.number.XNumberUtils;
 import xie.v2i.app.Video2Image;
 import xie.v2i.config.Video2ImageProperties;
 
@@ -28,7 +27,6 @@ public class TestRunVideo {
 		try {
 			logger.info("begin process animeEpisodeId: " + paramMap);
 
-
 			Video2ImageDoNotingListener saveImageListener = new Video2ImageDoNotingListener(2000);
 			File fileMrl = new File("F:\\AnimeShotSite\\anime\\2016\\美少女战士\\Crystal\\资源\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB]\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB][1080p x264 AAC][036B4C1E].mp4");
 
@@ -46,6 +44,10 @@ public class TestRunVideo {
 			if (endTime != null) {
 				video2Image.setEndTime(endTime);
 			}
+//			video2Image.getVideo2ImageProperties().width = 1920;
+//			video2Image.getVideo2ImageProperties().height = 1080;
+			video2Image.getVideo2ImageProperties().width = 1280;
+			video2Image.getVideo2ImageProperties().height = 720;
 
 			video2Image.run();
 

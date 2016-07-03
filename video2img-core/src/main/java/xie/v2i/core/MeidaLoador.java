@@ -48,7 +48,7 @@ public class MeidaLoador {
 	private JPanel videoSurface;
 
 	private BufferedImage bufferedImage;
-	private int[] rgbBuffer_test;
+	private int[] rgbBufferRef;
 
 	private DirectMediaPlayerComponent mediaPlayerComponent;
 
@@ -58,16 +58,25 @@ public class MeidaLoador {
 
 	private long totalTime = 0;
 
+	// 判断参数
+
 	/** 视频是否已经载入 */
 	private boolean isVideoLoaded = false;
 	/** 视频是否已经暂停播放 (初始认为非暂停状态，所以应该在视频载入后才能判断该值) */
 	private boolean isDoPauseActionFlg = false;;
 
 	/** 判断视频帧是否已经改变或者超时 */
-	private XWaitChange xWaitChange = new XWaitChange(0, 10000);
+	private XWaitChange xWaitChange = new XWaitChange(0);
 
-	/** 视频帧是否已经可用    当前该判断用于是否超时 */
-	private boolean isOnDisplayFlg = false;
+	/** 视频帧是否已经可用 当前该判断用于是否超时 */
+	private boolean isOnDisplayTimeoutFlg = false;
+
+	private boolean isStopedFlg = true;
+
+	// 比较参数
+	/** 每次图像改变后，缓存该图像，留作和下一个图像比较用 */
+	private int[] preRgb;
+	private boolean rgbBufferChangedFlg = false;
 
 	// 测试参数
 	private int paintComponent = 0;
@@ -77,6 +86,7 @@ public class MeidaLoador {
 	private long 校准真实时间 = 0;
 	private long 校准视频时间 = 0;
 	private int mediaPlayerComponent_Display = 0;
+	private long timeChanged = 0;
 
 	private boolean showAnimeFlg = true;
 
@@ -138,6 +148,13 @@ public class MeidaLoador {
 		controlsPane.add(savePicButton);
 		frame.add(controlsPane, BorderLayout.SOUTH);
 
+		seedInputButton.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				mediaPlayerComponent.getMediaPlayer().setTime(Long.valueOf(seedInputField.getText()));
+			}
+		});
+
 		pauseButton.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
@@ -188,8 +205,14 @@ public class MeidaLoador {
 
 			@Override
 			public void display(DirectMediaPlayer mediaPlayer, Memory[] nativeBuffers, BufferFormat bufferFormat) {
+				isStopedFlg = false;
 				super.display(mediaPlayer, nativeBuffers, bufferFormat);
 				mediaPlayerComponent_Display++;
+			}
+
+			@Override
+			public void timeChanged(MediaPlayer mediaPlayer, long newTime) {
+				timeChanged = newTime;
 			}
 
 			@Override
@@ -206,6 +229,7 @@ public class MeidaLoador {
 
 			@Override
 			public void stopped(MediaPlayer mediaPlayer) {
+				isStopedFlg = true;
 				super.stopped(mediaPlayer);
 
 			}
@@ -217,7 +241,7 @@ public class MeidaLoador {
 
 			@Override
 			public void playing(MediaPlayer mediaPlayer) {
-				super.playing(mediaPlayer);
+				isStopedFlg = false;
 			}
 		};
 
@@ -241,7 +265,7 @@ public class MeidaLoador {
 		Graphics2D g2D;
 
 		private void drawStringLine(String value) {
-			g2D.drawString(value, 14, lineHeight);
+			g2D.drawString(value, 20, lineHeight);
 			lineHeight += 10;
 		}
 
@@ -267,15 +291,25 @@ public class MeidaLoador {
 			drawStringLine("display: " + display);
 			drawStringLine("getMediaPlayer().getTime(): " + mediaPlayerComponent.getMediaPlayer().getTime());
 			drawStringLine("preTime: " + preTime);
+			drawStringLine("timeChanged: " + timeChanged);
 			drawStringLine("xWaitChange.pastTime : " + xWaitChange.getPastTime());
 			drawStringLine("isRefreshedAfterChangeTime: " + isRefreshedAfterChangeTime(mediaPlayerComponent.getMediaPlayer().getTime()));
 			drawStringLine("isVideoLoaded: " + isVideoLoaded);
 			drawStringLine("校准真实时间: " + 校准真实时间);
 			drawStringLine("校准视频时间: " + 校准视频时间);
-			drawStringLine("rgbBuffer_test: " + rgbBuffer_test);
+			drawStringLine("rgbBufferRef: " + rgbBufferRef);
 			drawStringLine("bufferedImage: " + bufferedImage);
+			drawStringLine("preRgb: " + preRgb);
+			if (preRgb == null) {
+				drawStringLine("preRgb length: " + null);
+			} else {
+				drawStringLine("preRgb length: " + preRgb.length);
+			}
+			drawStringLine("rgbBufferChangedFlg: " + rgbBufferChangedFlg);
 			drawStringLine("mediaPlayerComponent_Display: " + mediaPlayerComponent_Display);
 
+			drawStringLine("isStopedFlg: " + isStopedFlg);
+			drawStringLine("isDoPauseActionFlg: " + isDoPauseActionFlg);
 			// try {
 			// // if (!ImageIO.write(image, "jpg", new File("D:\\work\\temp\\"
 			// // + paintComponent + ".jpg"))) {
@@ -331,17 +365,66 @@ public class MeidaLoador {
 			}
 
 			// xWaitChange.isChanged(nowTime);
-			if (xWaitChange.getPastTime() > 10000) {
-				isOnDisplayFlg = true;
-				logger.debug("isOnDisplayFlg: " + isOnDisplayFlg + "," + xWaitChange.getPastTime());
+			if (xWaitChange.getPastTime() > 20000) {
+				isOnDisplayTimeoutFlg = true;
+				logger.debug("isOnDisplayTimeoutFlg: " + isOnDisplayTimeoutFlg + "," + xWaitChange.getPastTime());
 			}
 
 			bufferedImage.setRGB(0, 0, width, height, rgbBuffer, 0, width);
-			rgbBuffer_test = rgbBuffer;
+			rgbBufferRef = rgbBuffer;
+
+			checkRgbChangedAfterChangedOrWaitTime(mediaPlayer.getTime(), rgbBufferRef);
 
 			if (showAnimeFlg) {
 				videoSurface.repaint();
 			}
+		}
+	}
+
+	private void checkRgbChangedAfterChangedOrWaitTime(long mediaTime, int[] mediaRgbBufferRef) {
+		if (xWaitChange.isChanged(mediaTime) || xWaitChange.getPastTime() > 5000) {
+			if (!rgbBufferChangedFlg) {
+				boolean changedFlg = false;
+				// 如果图片没有改变过， 则先将当前图像进行复制
+				if (preRgb == null || preRgb.length != mediaRgbBufferRef.length) {
+					preRgb = new int[mediaRgbBufferRef.length];
+					changedFlg = true;
+				} else {
+					changedFlg = checkRgbChanged(preRgb, mediaRgbBufferRef);
+				}
+
+				if (changedFlg) {
+					System.arraycopy(mediaRgbBufferRef, 0, preRgb, 0, mediaRgbBufferRef.length);
+					rgbBufferChangedFlg = true;
+				}
+			}
+		}
+	}
+
+	public boolean checkRgbChanged() {
+		return checkRgbChanged(preRgb, rgbBufferRef);
+	}
+
+	public boolean checkRgbChanged(int[] cacheRgb, int[] realRgb) {
+		boolean changedFrontFlg = false;
+		boolean changedAfterFlg = false;
+		for (int i = 0; i < cacheRgb.length / 5; i++) {
+			if (cacheRgb[i] != realRgb[i]) {
+				changedFrontFlg = true;
+				break;
+			}
+		}
+		for (int i = cacheRgb.length - 1; i >= cacheRgb.length * 4 / 5; i--) {
+			if (cacheRgb[i] != realRgb[i]) {
+				changedAfterFlg = true;
+				break;
+			}
+		}
+
+		if (changedFrontFlg && changedAfterFlg) {
+			return true;
+		} else {
+			return false;
 		}
 	}
 
@@ -365,20 +448,52 @@ public class MeidaLoador {
 		mediaPlayerComponent.getMediaPlayer().pause();
 	}
 
+	public void start() {
+		mediaPlayerComponent.getMediaPlayer().start();
+	}
+
 	public void skip(long skipTime) {
 		long time = mediaPlayerComponent.getMediaPlayer().getTime() + skipTime;
 		setTime(time);
 	}
 
 	public void setTime(long time) {
+		logger.info("setTime start: " + time);
+		// 改变时间前先复制当前图像
+		if (!rgbBufferChangedFlg) {
+			// 如果图片没有改变过， 则先将当前图像进行复制
+			if (preRgb == null || preRgb.length != rgbBufferRef.length) {
+				preRgb = new int[rgbBufferRef.length];
+			}
+			System.arraycopy(rgbBufferRef, 0, preRgb, 0, rgbBufferRef.length);
+		}
+		rgbBufferChangedFlg = false;
+
+		// 设置时间
 		mediaPlayerComponent.getMediaPlayer().setTime(time);
 
-		isOnDisplayFlg = false;
+		// 重置参数
 		xWaitChange.resetCompareValue(time);
+		isOnDisplayTimeoutFlg = false;
+
+		logger.info("setTime end: " + time);
 	}
 
 	public boolean isRefreshedAfterChangeTime(long time) {
-		return xWaitChange.isChanged(time) || isOnDisplayFlg;
+		// return xWaitChange.isChanged(time) || isOnDisplayTimeoutFlg;
+		// return xWaitChange.isChanged(time) || rgbBufferChangedFlg;
+		// return rgbBufferChangedFlg || isOnDisplayTimeoutFlg;
+
+		checkRgbChangedAfterChangedOrWaitTime(mediaPlayerComponent.getMediaPlayer().getTime(), rgbBufferRef);
+		return rgbBufferChangedFlg && !isOnDisplayTimeoutFlg;
+	}
+
+	public long getPastTime() {
+		return xWaitChange.getPastTime();
+	}
+
+	public boolean isOnDisplayTimeoutFlg() {
+		return isOnDisplayTimeoutFlg;
 	}
 
 	public void setShowVideo(boolean showAnimeFlg) {
@@ -395,6 +510,10 @@ public class MeidaLoador {
 
 	public void stop() {
 		mediaPlayerComponent.getMediaPlayer().stop();
+	}
+
+	public boolean isStoped() {
+		return isStopedFlg;
 	}
 
 	/**

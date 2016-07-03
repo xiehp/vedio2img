@@ -191,6 +191,32 @@ public class Video2Image {
 											}
 											break;
 										}
+
+										if (meidaLoador.isStoped()) {
+											logger.warn("meidaLoador 发生了主动停止。");
+											break;
+										}
+
+										// 截图超时，则重新开始暂停
+										if (meidaLoador.isOnDisplayTimeoutFlg()) {
+											logger.warn("截图发生超时，发送开始命令");
+											meidaLoador.start();
+											Thread.sleep(5000);
+
+											logger.warn("截图发生超时，发送暂停命令");
+											meidaLoador.pause();
+											Thread.sleep(5000);
+
+											logger.warn("截图发生超时，重新设置时间");
+											meidaLoador.setTime(time);
+										}
+
+										if (meidaLoador.getPastTime() > 300000) {
+											// 300秒没反应，关闭
+											logger.info("300秒没反应，关闭");
+											throw new RuntimeException("300秒没反应，关闭");
+										}
+
 										Thread.sleep(100);
 									}
 
@@ -198,6 +224,7 @@ public class Video2Image {
 										// 判断是否是最后一个指定时间
 										if (config.specifyTimes.length <= runCount + 1) {
 											// 截图循环结束
+											logger.info("已经是最后一个指定时间,结束循环");
 											break;
 										}
 
@@ -211,6 +238,7 @@ public class Video2Image {
 											// 判断下一个时间是否超出结束时间
 											if (time > config.endTime) {
 												// 截图循环结束
+												logger.info("下一个时间超出结束时间,结束循环");
 												break;
 											}
 										}
@@ -220,8 +248,9 @@ public class Video2Image {
 
 									// 判断是否已经超出视频总时间
 									long totalTime = meidaLoador.getTotalTime();
-									if (totalTime > 0 && time > totalTime) {
+									if (totalTime > 0 && time >= totalTime) {
 										// 截图循环结束
+										logger.info("已经超出视频总时间,结束循环");
 										break;
 									}
 
@@ -229,13 +258,12 @@ public class Video2Image {
 								}
 
 								isProcessSuccess = true;
-								closeMediaLoader();
 
 							} catch (InterruptedException e) {
-								e.printStackTrace();
-								closeMediaLoader();
+								logger.error(e.toString(), e);
 							} catch (Exception e) {
-								e.printStackTrace();
+								logger.error(e.toString(), e);
+							} finally {
 								closeMediaLoader();
 							}
 						}
@@ -244,8 +272,9 @@ public class Video2Image {
 					thread.start();
 
 				} catch (Exception e) {
-					e.printStackTrace();
-					closeMediaLoader();
+					logger.debug(e.toString(), e);
+
+					// closeMediaLoader();
 				}
 			}
 		});

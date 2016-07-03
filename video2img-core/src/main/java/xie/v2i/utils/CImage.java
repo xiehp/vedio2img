@@ -12,13 +12,20 @@ import xie.common.image.XImageUtils;
 public class CImage {
 	private final static Logger logger = LoggerFactory.getLogger(CImage.class);
 
+	/**
+	 * 获得带.jpg的完整文件名
+	 * 
+	 * @param fileName
+	 * @param folder
+	 * @return
+	 */
 	public static File getFilePath(Object fileName, File folder) {
 		String imageFileName = fileName.toString();
 		if (!imageFileName.toLowerCase().endsWith(".jpg")) {
 			imageFileName = imageFileName + ".jpg";
 		}
-		// imageFileName = imageFileName.replace(" ", "_");
-		imageFileName = imageFileName.replace("?", "_");
+
+		imageFileName = imageFileName.replace("?", "？");
 		File file = new File(folder, imageFileName);
 		return file;
 	}
