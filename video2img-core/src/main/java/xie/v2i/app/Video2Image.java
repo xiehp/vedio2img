@@ -217,7 +217,7 @@ public class Video2Image {
 											throw new RuntimeException("300秒没反应，关闭");
 										}
 
-										Thread.sleep(100);
+										Thread.sleep(200);
 									}
 
 									if (Video2ImageProperties.RUN_MODE_SPECIAL.equals(config.runMode)) {
@@ -300,10 +300,11 @@ public class Video2Image {
 
 	public void closeMediaLoader() {
 		// meidaLoador.stop();
-		logger.info("closeMediaLoader");
+		logger.info("closeMediaLoader begin");
 		meidaLoador.release();
 		meidaLoador.dispose();
 		isProcessing = false;
+		logger.info("closeMediaLoader end");
 	}
 
 	public boolean isClosed() {

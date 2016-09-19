@@ -382,6 +382,11 @@ public class MeidaLoador {
 	}
 
 	private void checkRgbChangedAfterChangedOrWaitTime(long mediaTime, int[] mediaRgbBufferRef) {
+		if (mediaRgbBufferRef == null) {
+			// 还未生成任何图像
+			return;
+		}
+
 		if (xWaitChange.isChanged(mediaTime) || xWaitChange.getPastTime() > 5000) {
 			if (!rgbBufferChangedFlg) {
 				boolean changedFlg = false;
@@ -445,11 +450,15 @@ public class MeidaLoador {
 	}
 
 	public void pause() {
+		logger.info("接受到暂停命令");
 		mediaPlayerComponent.getMediaPlayer().pause();
+		logger.info("暂停成功");
 	}
 
 	public void start() {
+		logger.info("接受到开始命令");
 		mediaPlayerComponent.getMediaPlayer().start();
+		logger.info("开始成功");
 	}
 
 	public void skip(long skipTime) {
