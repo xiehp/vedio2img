@@ -13,7 +13,7 @@ public class CImage {
 	private final static Logger logger = LoggerFactory.getLogger(CImage.class);
 
 	/**
-	 * 获得带.jpg的完整文件名
+	 * 获得带.jpg的完整文件名，替换小写问号为大写问号
 	 * 
 	 * @param fileName
 	 * @param folder
@@ -21,7 +21,7 @@ public class CImage {
 	 */
 	public static File getFilePath(Object fileName, File folder) {
 		String imageFileName = fileName.toString();
-		if (!imageFileName.toLowerCase().endsWith(".jpg")) {
+		if (!imageFileName.toLowerCase().endsWith(".jpg") && !imageFileName.toLowerCase().endsWith(".jpeg")) {
 			imageFileName = imageFileName + ".jpg";
 		}
 

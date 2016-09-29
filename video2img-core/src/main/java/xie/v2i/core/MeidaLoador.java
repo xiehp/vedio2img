@@ -450,13 +450,13 @@ public class MeidaLoador {
 	}
 
 	public void pause() {
-		logger.info("接受到暂停命令");
+		logger.info("接受到暂停命令，向播放器发出暂停命令");
 		mediaPlayerComponent.getMediaPlayer().pause();
 		logger.info("暂停成功");
 	}
 
 	public void start() {
-		logger.info("接受到开始命令");
+		logger.info("接受到开始命令，向播放器发出开始命令");
 		mediaPlayerComponent.getMediaPlayer().start();
 		logger.info("开始成功");
 	}
