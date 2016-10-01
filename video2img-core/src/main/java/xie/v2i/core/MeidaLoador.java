@@ -70,6 +70,10 @@ public class MeidaLoador {
 
 	/** 视频帧是否已经可用 当前该判断用于是否超时 */
 	private boolean isOnDisplayTimeoutFlg = false;
+	/** 判断超时的时间 */
+	private long onDisplayTimeoutValue = 30000;
+	/** 认为的超时时间之前，需要做某些事情，如超时之前需要判断图像是否已经发生变化 */
+	private long beforeOnDisplayTimeoutValue = onDisplayTimeoutValue - 5000;
 
 	private boolean isStopedFlg = true;
 
@@ -293,7 +297,8 @@ public class MeidaLoador {
 			drawStringLine("preTime: " + preTime);
 			drawStringLine("timeChanged: " + timeChanged);
 			drawStringLine("xWaitChange.pastTime : " + xWaitChange.getPastTime());
-			drawStringLine("isRefreshedAfterChangeTime: " + isRefreshedAfterChangeTime(mediaPlayerComponent.getMediaPlayer().getTime()));
+			drawStringLine("isOnDisplayTimeoutFlg: " + isOnDisplayTimeoutFlg);
+			// drawStringLine("isRefreshedAfterChangeTime: " + isRefreshedAfterChangeTime(mediaPlayerComponent.getMediaPlayer().getTime()));
 			drawStringLine("isVideoLoaded: " + isVideoLoaded);
 			drawStringLine("校准真实时间: " + 校准真实时间);
 			drawStringLine("校准视频时间: " + 校准视频时间);
@@ -365,7 +370,7 @@ public class MeidaLoador {
 			}
 
 			// xWaitChange.isChanged(nowTime);
-			if (xWaitChange.getPastTime() > 20000) {
+			if (xWaitChange.getPastTime() > onDisplayTimeoutValue) {
 				isOnDisplayTimeoutFlg = true;
 				logger.debug("isOnDisplayTimeoutFlg: " + isOnDisplayTimeoutFlg + "," + xWaitChange.getPastTime());
 			}
@@ -387,7 +392,7 @@ public class MeidaLoador {
 			return;
 		}
 
-		if (xWaitChange.isChanged(mediaTime) || xWaitChange.getPastTime() > 5000) {
+		if (xWaitChange.isChanged(mediaTime) || xWaitChange.getPastTime() > beforeOnDisplayTimeoutValue) {
 			if (!rgbBufferChangedFlg) {
 				boolean changedFlg = false;
 				// 如果图片没有改变过， 则先将当前图像进行复制
@@ -395,7 +400,12 @@ public class MeidaLoador {
 					preRgb = new int[mediaRgbBufferRef.length];
 					changedFlg = true;
 				} else {
-					changedFlg = checkRgbChanged(preRgb, mediaRgbBufferRef);
+					// 还未超时，只判断图像的一部分，超时之前，判断完整图像
+					if (xWaitChange.getPastTime() < beforeOnDisplayTimeoutValue) {
+						changedFlg = checkRgbChanged(preRgb, mediaRgbBufferRef, -1);
+					} else {
+						changedFlg = checkRgbChanged(preRgb, mediaRgbBufferRef, 1);
+					}
 				}
 
 				if (changedFlg) {
@@ -407,26 +417,31 @@ public class MeidaLoador {
 	}
 
 	public boolean checkRgbChanged() {
-		return checkRgbChanged(preRgb, rgbBufferRef);
+		return checkRgbChanged(preRgb, rgbBufferRef, -1);
 	}
 
-	public boolean checkRgbChanged(int[] cacheRgb, int[] realRgb) {
+	/**
+	 * 检查图像是否改变了
+	 * 
+	 * @param cacheRgb
+	 * @param realRgb
+	 * @param checkStep 像素点检查间隔
+	 * @return
+	 */
+	private boolean checkRgbChanged(int[] cacheRgb, int[] realRgb, int checkStep) {
+		if (checkStep < 1) {
+			checkStep = 11;
+		}
 		boolean changedFrontFlg = false;
-		boolean changedAfterFlg = false;
-		for (int i = 0; i < cacheRgb.length / 5; i++) {
+
+		for (int i = 0; i < cacheRgb.length; i = i + checkStep) {
 			if (cacheRgb[i] != realRgb[i]) {
 				changedFrontFlg = true;
 				break;
 			}
 		}
-		for (int i = cacheRgb.length - 1; i >= cacheRgb.length * 4 / 5; i--) {
-			if (cacheRgb[i] != realRgb[i]) {
-				changedAfterFlg = true;
-				break;
-			}
-		}
 
-		if (changedFrontFlg && changedAfterFlg) {
+		if (changedFrontFlg) {
 			return true;
 		} else {
 			return false;
@@ -494,7 +509,7 @@ public class MeidaLoador {
 		// return rgbBufferChangedFlg || isOnDisplayTimeoutFlg;
 
 		checkRgbChangedAfterChangedOrWaitTime(mediaPlayerComponent.getMediaPlayer().getTime(), rgbBufferRef);
-		return rgbBufferChangedFlg && !isOnDisplayTimeoutFlg;
+		return rgbBufferChangedFlg;
 	}
 
 	public long getPastTime() {

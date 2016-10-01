@@ -14,7 +14,7 @@ import xie.v2i.listener.Video2ImageListener;
 
 public class Video2Image {
 
-	static Logger logger = LoggerFactory.getLogger(Video2Image.class);
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	private MeidaLoador meidaLoador;
 
@@ -129,16 +129,23 @@ public class Video2Image {
 						public void run() {
 
 							try {
+								logger.info("视频截图处理程序开始执行");
+
 								while (!meidaLoador.isVideoLoaded()) {
+									logger.info("视频已载入。");
 									Thread.sleep(100);
 								}
 								Thread.sleep(2000);
+								
+
+								logger.info("开始处理前暂停视频");
 								meidaLoador.pause();
-								logger.debug("do meidaLoador.pause()");
+								logger.info("已执行 meidaLoador.pause()");
 
 								XWaitTime xWaitTime = new XWaitTime(20000);
 								while (!meidaLoador.isDoPauseAction()) {
 									if (xWaitTime.isTimeout()) {
+										logger.error("载入后暂停视频超时");
 										break;
 									}
 
@@ -159,16 +166,22 @@ public class Video2Image {
 								int runCount = 0;
 
 								// 先随便指定一个时间
-								meidaLoador.setTime(2600);
+								logger.info("开始处理前随便执行一个时间");
+								meidaLoador.setTime(1000);
 								Thread.sleep(500);
 								while (true) {
 									if (meidaLoador.isRefreshedAfterChangeTime(meidaLoador.getTime())) {
 										break;
 									}
+									if (meidaLoador.isOnDisplayTimeoutFlg()) {
+										logger.error("视频初始化设置时间超时，继续开始截图。");
+										Thread.sleep(500);
+										break;
+									}
 									Thread.sleep(100);
 								}
-								Thread.sleep(500);
 
+								logger.info("开始截图循环处理");
 								// 开始截图
 								while (true) {
 									// 设置截图时间
@@ -201,11 +214,11 @@ public class Video2Image {
 										if (meidaLoador.isOnDisplayTimeoutFlg()) {
 											logger.warn("截图发生超时，发送开始命令");
 											meidaLoador.start();
-											Thread.sleep(5000);
+											Thread.sleep(10000);
 
 											logger.warn("截图发生超时，发送暂停命令");
 											meidaLoador.pause();
-											Thread.sleep(5000);
+											Thread.sleep(10000);
 
 											logger.warn("截图发生超时，重新设置时间");
 											meidaLoador.setTime(time);
