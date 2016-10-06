@@ -132,11 +132,11 @@ public class Video2Image {
 								logger.info("视频截图处理程序开始执行");
 
 								while (!meidaLoador.isVideoLoaded()) {
-									logger.info("视频已载入。");
+									logger.info("视频未载入。");
 									Thread.sleep(100);
 								}
+								logger.info("视频已载入。");
 								Thread.sleep(2000);
-								
 
 								logger.info("开始处理前暂停视频");
 								meidaLoador.pause();
@@ -167,7 +167,7 @@ public class Video2Image {
 
 								// 先随便指定一个时间
 								logger.info("开始处理前随便执行一个时间");
-								meidaLoador.setTime(1000);
+								meidaLoador.setTime(4700);
 								Thread.sleep(500);
 								while (true) {
 									if (meidaLoador.isRefreshedAfterChangeTime(meidaLoador.getTime())) {

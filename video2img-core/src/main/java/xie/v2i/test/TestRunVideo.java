@@ -28,7 +28,8 @@ public class TestRunVideo {
 			logger.info("begin process animeEpisodeId: " + paramMap);
 
 			Video2ImageDoNotingListener saveImageListener = new Video2ImageDoNotingListener(2000);
-			File fileMrl = new File("F:\\AnimeShotSite\\anime\\2016\\美少女战士\\Crystal\\资源\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB]\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB][1080p x264 AAC][036B4C1E].mp4");
+//			File fileMrl = new File("F:\\AnimeShotSite\\anime\\2016\\美少女战士\\Crystal\\资源\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB]\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB][1080p x264 AAC][036B4C1E].mp4");
+			File fileMrl = new File("E:\\AnimeShotSIte\\anime\\G\\干物妹！小埋\\[Kamigami] Himouto! Umaru-chan - 05 [1920x1080 x264 AAC Sub(Chs,Cht,Jap)].mkv");
 
 			Video2Image video2Image = new Video2Image(fileMrl.getAbsolutePath(), saveImageListener);
 			video2Image.setRunMode(Video2ImageProperties.RUN_MODE_INTERVAL);
