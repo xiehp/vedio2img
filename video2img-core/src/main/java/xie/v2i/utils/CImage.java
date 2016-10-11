@@ -41,7 +41,7 @@ public class CImage {
 			if (!filePath.getParentFile().exists()) {
 				filePath.getParentFile().mkdirs();
 			}
-			XImageUtils.writeWithQuality(image, "jpeg", filePath, 0.9f);
+			XImageUtils.writeWithQuality(image, "jpeg", filePath, 0.91f);
 			// if (!ImageIO.write(image, "jpeg", filePath)) {
 			// logger.debug("文件保存失败, " + filePath.getAbsolutePath());
 			// filePath = null;
