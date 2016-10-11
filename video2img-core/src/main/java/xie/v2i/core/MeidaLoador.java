@@ -35,8 +35,8 @@ import uk.co.caprica.vlcj.player.direct.DirectMediaPlayer;
 import uk.co.caprica.vlcj.player.direct.RenderCallback;
 import uk.co.caprica.vlcj.player.direct.RenderCallbackAdapter;
 import uk.co.caprica.vlcj.player.direct.format.RV32BufferFormat;
-import uk.co.caprica.vlcjinfo.MediaInfo;
 import xie.common.utils.XWaitChange;
+import xie.common.utils.XWaitTime;
 import xie.v2i.utils.CImage;
 
 public class MeidaLoador {
@@ -51,6 +51,7 @@ public class MeidaLoador {
 	private int[] rgbBufferRef;
 
 	private DirectMediaPlayerComponent mediaPlayerComponent;
+	private DirectMediaPlayer meidaLoador;
 
 	private int width = 1280;
 
@@ -59,7 +60,6 @@ public class MeidaLoador {
 	private long totalTime = 0;
 
 	// 判断参数
-
 	/** 视频是否已经载入 */
 	private boolean isVideoLoaded = false;
 	/** 视频是否已经暂停播放 (初始认为非暂停状态，所以应该在视频载入后才能判断该值) */
@@ -71,9 +71,9 @@ public class MeidaLoador {
 	/** 视频帧是否已经可用 当前该判断用于是否超时 */
 	private boolean isOnDisplayTimeoutFlg = false;
 	/** 判断超时的时间 */
-	private long onDisplayTimeoutValue = 30000;
+	private long ON_DISPLAY_TIMEOUT_VALUE = 30000;
 	/** 认为的超时时间之前，需要做某些事情，如超时之前需要判断图像是否已经发生变化 */
-	private long beforeOnDisplayTimeoutValue = onDisplayTimeoutValue - 5000;
+	private long BEFORE_ON_DISPLAY_TIMEOUT_VALUE = ON_DISPLAY_TIMEOUT_VALUE - 5000;
 
 	private boolean isStopedFlg = true;
 
@@ -81,6 +81,9 @@ public class MeidaLoador {
 	/** 每次图像改变后，缓存该图像，留作和下一个图像比较用 */
 	private int[] preRgb;
 	private boolean rgbBufferChangedFlg = false;
+
+	/** 当前设定的时间 */
+	private long nowSetedTime;
 
 	// 测试参数
 	private int paintComponent = 0;
@@ -92,9 +95,10 @@ public class MeidaLoador {
 	private int mediaPlayerComponent_Display = 0;
 	private long timeChanged = 0;
 
-	private boolean showAnimeFlg = true;
-
 	private long preTime = 0;
+
+	// 控制参数
+	private boolean showVideoImageFlg = true;
 
 	public static void main(final String[] args) {
 		BasicConfigurator.configure();
@@ -102,12 +106,16 @@ public class MeidaLoador {
 		SwingUtilities.invokeLater(new Runnable() {
 
 			public void run() {
-				String mrl = "G:\\video\\無彩限のファントム·ワールド 02.mp4";
+				// String mrl = "G:\\video\\無彩限のファントム·ワールド 02.mp4";
+				File fileMrl = new File("E:\\AnimeShotSIte\\anime\\M\\命运之夜\\UBW\\[Kamigami] Fate stay night UBW - 03 [1080p x265 Ma10p FLAC Sub(Eng,Jap)].mkv");
 
-				MediaInfo mediaInfo = MediaInfo.mediaInfo(mrl);
-				System.out.println(mediaInfo.toString());
+				// MediaInfo mediaInfo = MediaInfo.mediaInfo(fileMrl.getAbsolutePath());
+				// System.out.println(mediaInfo.toString());
 
-				new MeidaLoador(mrl);
+				// MeidaLoador meidaLoador = new MeidaLoador(fileMrl.getAbsolutePath(), 640,480);
+				MeidaLoador meidaLoador = new MeidaLoador(fileMrl.getAbsolutePath(), 1920, 1080);
+				// meidaLoador.setPlaySpeed(0.125f);
+				// meidaLoador.start();
 			}
 		});
 	}
@@ -140,6 +148,8 @@ public class MeidaLoador {
 		seedInputField.setBounds(0, 0, 200, 20);
 		seedInputField.setText("1000000");
 		controlsPane.add(seedInputField);
+		JButton showVideoButton = new JButton("显示视频图像");
+		controlsPane.add(showVideoButton);
 		JButton seedInputButton = new JButton("Seek");
 		controlsPane.add(seedInputButton);
 		JButton pauseButton = new JButton("Pause");
@@ -151,6 +161,17 @@ public class MeidaLoador {
 		JButton savePicButton = new JButton("save pic");
 		controlsPane.add(savePicButton);
 		frame.add(controlsPane, BorderLayout.SOUTH);
+
+		showVideoButton.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				if (showVideoImageFlg) {
+					showVideoImageFlg = false;
+				} else {
+					showVideoImageFlg = true;
+				}
+			}
+		});
 
 		seedInputButton.addActionListener(new ActionListener() {
 
@@ -169,7 +190,8 @@ public class MeidaLoador {
 		rewindButton.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				mediaPlayerComponent.getMediaPlayer().skip(-10000);
+				long timeInputValue = Long.valueOf(seedInputField.getText());
+				mediaPlayerComponent.getMediaPlayer().skip(-timeInputValue);
 				System.out.println(mediaPlayerComponent.getMediaPlayer().getTime());
 				System.out.println(mediaPlayerComponent.getMediaPlayer().getPosition());
 			}
@@ -178,7 +200,8 @@ public class MeidaLoador {
 		skipButton.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				mediaPlayerComponent.getMediaPlayer().skip(10000);
+				long timeInputValue = Long.valueOf(seedInputField.getText());
+				mediaPlayerComponent.getMediaPlayer().skip(timeInputValue);
 				System.out.println(mediaPlayerComponent.getMediaPlayer().getTime());
 				System.out.println(mediaPlayerComponent.getMediaPlayer().getPosition());
 			}
@@ -251,6 +274,7 @@ public class MeidaLoador {
 
 		frame.setVisible(true);
 		mediaPlayerComponent.getMediaPlayer().playMedia(mrl);
+		meidaLoador = mediaPlayerComponent.getMediaPlayer();
 	}
 
 	private class VideoSurfacePanel extends JPanel {
@@ -293,6 +317,7 @@ public class MeidaLoador {
 			drawStringLine("paintComponent: " + paintComponent);
 			drawStringLine("onDisplay: " + onDisplay);
 			drawStringLine("display: " + display);
+			drawStringLine("nowSetedTime: " + nowSetedTime);
 			drawStringLine("getMediaPlayer().getTime(): " + mediaPlayerComponent.getMediaPlayer().getTime());
 			drawStringLine("preTime: " + preTime);
 			drawStringLine("timeChanged: " + timeChanged);
@@ -315,6 +340,8 @@ public class MeidaLoador {
 
 			drawStringLine("isStopedFlg: " + isStopedFlg);
 			drawStringLine("isDoPauseActionFlg: " + isDoPauseActionFlg);
+			drawStringLine("showVideoImageFlg: " + showVideoImageFlg);
+
 			// try {
 			// // if (!ImageIO.write(image, "jpg", new File("D:\\work\\temp\\"
 			// // + paintComponent + ".jpg"))) {
@@ -370,7 +397,7 @@ public class MeidaLoador {
 			}
 
 			// xWaitChange.isChanged(nowTime);
-			if (xWaitChange.getPastTime() > onDisplayTimeoutValue) {
+			if (xWaitChange.getPastTime() > ON_DISPLAY_TIMEOUT_VALUE) {
 				isOnDisplayTimeoutFlg = true;
 				logger.debug("isOnDisplayTimeoutFlg: " + isOnDisplayTimeoutFlg + "," + xWaitChange.getPastTime());
 			}
@@ -380,7 +407,7 @@ public class MeidaLoador {
 
 			checkRgbChangedAfterChangedOrWaitTime(mediaPlayer.getTime(), rgbBufferRef);
 
-			if (showAnimeFlg) {
+			if (showVideoImageFlg) {
 				videoSurface.repaint();
 			}
 		}
@@ -392,7 +419,7 @@ public class MeidaLoador {
 			return;
 		}
 
-		if (xWaitChange.isChanged(mediaTime) || xWaitChange.getPastTime() > beforeOnDisplayTimeoutValue) {
+		if (xWaitChange.isChanged(mediaTime) || xWaitChange.getPastTime() > BEFORE_ON_DISPLAY_TIMEOUT_VALUE) {
 			if (!rgbBufferChangedFlg) {
 				boolean changedFlg = false;
 				// 如果图片没有改变过， 则先将当前图像进行复制
@@ -400,9 +427,9 @@ public class MeidaLoador {
 					preRgb = new int[mediaRgbBufferRef.length];
 					changedFlg = true;
 				} else {
-					// 还未超时，只判断图像的一部分，超时之前，判断完整图像
-					if (xWaitChange.getPastTime() < beforeOnDisplayTimeoutValue) {
-						changedFlg = checkRgbChanged(preRgb, mediaRgbBufferRef, -1);
+					// 还未超时，只判断图像的一部分，超时后，判断完整图像
+					if (xWaitChange.getPastTime() < BEFORE_ON_DISPLAY_TIMEOUT_VALUE) {
+						changedFlg = checkRgbChanged(preRgb, mediaRgbBufferRef, 13);
 					} else {
 						changedFlg = checkRgbChanged(preRgb, mediaRgbBufferRef, 1);
 					}
@@ -410,6 +437,7 @@ public class MeidaLoador {
 
 				if (changedFlg) {
 					System.arraycopy(mediaRgbBufferRef, 0, preRgb, 0, mediaRgbBufferRef.length);
+					logger.info("图像已改变, setTime:{}, mediaTime:{}", nowSetedTime, mediaTime);
 					rgbBufferChangedFlg = true;
 				}
 			}
@@ -483,6 +511,7 @@ public class MeidaLoador {
 
 	public void setTime(long time) {
 		logger.info("setTime start: " + time);
+
 		// 改变时间前先复制当前图像
 		if (!rgbBufferChangedFlg) {
 			// 如果图片没有改变过， 则先将当前图像进行复制
@@ -490,10 +519,12 @@ public class MeidaLoador {
 				preRgb = new int[rgbBufferRef.length];
 			}
 			System.arraycopy(rgbBufferRef, 0, preRgb, 0, rgbBufferRef.length);
+			logger.info("setTime(), 重新设置了比较rgb数组");
 		}
 		rgbBufferChangedFlg = false;
 
 		// 设置时间
+		nowSetedTime = time;
 		mediaPlayerComponent.getMediaPlayer().setTime(time);
 
 		// 重置参数
@@ -520,8 +551,8 @@ public class MeidaLoador {
 		return isOnDisplayTimeoutFlg;
 	}
 
-	public void setShowVideo(boolean showAnimeFlg) {
-		this.showAnimeFlg = showAnimeFlg;
+	public void setShowVideoImageFlg(boolean showVideoImageFlg) {
+		this.showVideoImageFlg = showVideoImageFlg;
 	}
 
 	public boolean isPlaying() {
@@ -561,5 +592,66 @@ public class MeidaLoador {
 	public void dispose() {
 		frame.dispose();
 		isVideoLoaded = false;
+	}
+
+	/**
+	 * 关闭字幕
+	 */
+	public void closeSubtitle() {
+		meidaLoador.setSpu(-1);
+	}
+
+	/**
+	 * 设置播放速度
+	 */
+	public void setPlaySpeed(float speed) {
+		meidaLoador.setRate(speed);
+	}
+
+	/**
+	 * 通过直接播放到指定时间<br>
+	 * PS:超过一定时间自动暂停<br>
+	 * PS:由于1080P播放速度问题，速度调整为1/4，因此超时时间也相应增加4倍<br>
+	 * 
+	 * @param skipTime
+	 * @throws InterruptedException
+	 */
+	public void playToSpecialTime(long specialTime) throws InterruptedException {
+		long beforeSkipTime = meidaLoador.getTime();
+		long skipTime = specialTime - beforeSkipTime;
+		logger.warn("开始调整时间到{}, 当前时间点{}, 需要调整时间{}", specialTime, beforeSkipTime, skipTime);
+		if (skipTime < 100) {
+			logger.warn("指定时间小于当前视频时间，无法调整，必须大于100毫秒才能执行。", skipTime);
+			return;
+		}
+
+		// 关闭字幕，播放速度调整为1/4
+		closeSubtitle();
+
+		meidaLoador.start();
+		XWaitTime playWaitTime = new XWaitTime(skipTime * 8 + 2500);
+		while (true) {
+			if (specialTime - meidaLoador.getTime() < 100) {
+				logger.info("达到时间，停止", skipTime);
+				meidaLoador.pause();
+				Thread.sleep(2000);
+				break;
+			}
+			if (playWaitTime.isTimeout()) {
+				logger.warn("超时直接停止", skipTime);
+				meidaLoador.pause();
+				Thread.sleep(2000);
+				break;
+			}
+			Thread.sleep(50);
+		}
+	}
+
+	/**
+	 * 更新比较用rgb数组
+	 */
+	public void updateRgbToPre() {
+		logger.info("updateRgbToPre(), 重新设置了比较rgb数组");
+		System.arraycopy(rgbBufferRef, 0, preRgb, 0, rgbBufferRef.length);
 	}
 }

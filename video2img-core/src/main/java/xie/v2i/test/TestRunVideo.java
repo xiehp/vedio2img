@@ -28,12 +28,14 @@ public class TestRunVideo {
 			logger.info("begin process animeEpisodeId: " + paramMap);
 
 			Video2ImageDoNotingListener saveImageListener = new Video2ImageDoNotingListener(2000);
-//			File fileMrl = new File("F:\\AnimeShotSite\\anime\\2016\\美少女战士\\Crystal\\资源\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB]\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB][1080p x264 AAC][036B4C1E].mp4");
-			File fileMrl = new File("E:\\AnimeShotSIte\\anime\\G\\干物妹！小埋\\[Kamigami] Himouto! Umaru-chan - 05 [1920x1080 x264 AAC Sub(Chs,Cht,Jap)].mkv");
+			// File fileMrl = new File("F:\\AnimeShotSite\\anime\\2016\\美少女战士\\Crystal\\资源\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB]\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB][1080p x264 AAC][036B4C1E].mp4");
+			// File fileMrl = new File("E:\\AnimeShotSIte\\anime\\G\\干物妹！小埋\\[Kamigami] Himouto! Umaru-chan - 05 [1920x1080 x264 AAC Sub(Chs,Cht,Jap)].mkv");
+			File fileMrl = new File("E:\\AnimeShotSIte\\anime\\M\\命运之夜\\UBW\\[Kamigami] Fate stay night UBW - 03 [1080p x265 Ma10p FLAC Sub(Eng,Jap)].mkv");
 
 			Video2Image video2Image = new Video2Image(fileMrl.getAbsolutePath(), saveImageListener);
 			video2Image.setRunMode(Video2ImageProperties.RUN_MODE_INTERVAL);
-			Long startTime = 0L;
+			// video2Image.setRunMode(Video2ImageProperties.RUN_MODE_SPECIAL);
+			Long startTime = 35000L;
 			Long endTime = 2000000L;
 			Long interval = 5000L;
 			if (interval != null) {
@@ -45,10 +47,11 @@ public class TestRunVideo {
 			if (endTime != null) {
 				video2Image.setEndTime(endTime);
 			}
-//			video2Image.getVideo2ImageProperties().width = 1920;
-//			video2Image.getVideo2ImageProperties().height = 1080;
-			video2Image.getVideo2ImageProperties().width = 1280;
-			video2Image.getVideo2ImageProperties().height = 720;
+			video2Image.setSpecifyTimes(new long[] { 40000, 40000, 40000 });
+			 video2Image.getVideo2ImageProperties().width = 1920;
+			 video2Image.getVideo2ImageProperties().height = 1080;
+//			video2Image.getVideo2ImageProperties().width = 640;
+//			video2Image.getVideo2ImageProperties().height = 360;
 
 			video2Image.run();
 

@@ -194,6 +194,15 @@ public class Video2Image {
 											if (listener != null) {
 												listener.setTotalTime(meidaLoador.getTotalTime());
 												try {
+													// 如果当前真实视频时间在设定时间0.5秒之前，则执行播放操作
+													long difTime = time - meidaLoador.getTime();
+													if (difTime > 500) {
+														logger.warn("当前真实视频时间在设定时间{}秒之前，开始播放调整视频", difTime);
+														meidaLoador.playToSpecialTime(time);
+														meidaLoador.updateRgbToPre();
+													}
+
+													// 执行截图
 													listener.isRefreshedAfterChangeTime(time, meidaLoador.getTime(), meidaLoador.getBufferedImage());
 												} catch (Exception e) {
 													throw e;

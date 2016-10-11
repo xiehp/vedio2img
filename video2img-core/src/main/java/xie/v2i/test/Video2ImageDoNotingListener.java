@@ -17,7 +17,7 @@ public class Video2ImageDoNotingListener extends Video2ImageAdapter {
 
 	@Override
 	public void isRefreshedAfterChangeTime(long setTime, long originalTime, BufferedImage image) {
-		logger.info("isRefreshedAfterChangeTime, setTime:" + setTime + ", originalTime" + originalTime + ", image " + image);
+		logger.info("进入截图处理：isRefreshedAfterChangeTime, setTime:" + setTime + ", originalTime" + originalTime + ", image " + image);
 		try {
 			Thread.sleep(waitTime);
 		} catch (InterruptedException e) {
