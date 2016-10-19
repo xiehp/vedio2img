@@ -25,7 +25,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.sun.jna.Memory;
+import com.sun.jna.NativeLibrary;
 
+import uk.co.caprica.vlcj.binding.LibVlc;
 import uk.co.caprica.vlcj.component.DirectMediaPlayerComponent;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
 import uk.co.caprica.vlcj.player.MediaPlayer;
@@ -35,6 +37,7 @@ import uk.co.caprica.vlcj.player.direct.DirectMediaPlayer;
 import uk.co.caprica.vlcj.player.direct.RenderCallback;
 import uk.co.caprica.vlcj.player.direct.RenderCallbackAdapter;
 import uk.co.caprica.vlcj.player.direct.format.RV32BufferFormat;
+import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 import xie.common.utils.XWaitChange;
 import xie.common.utils.XWaitTime;
 import xie.v2i.utils.CImage;
@@ -100,15 +103,30 @@ public class MeidaLoador {
 	// 控制参数
 	private boolean showVideoImageFlg = true;
 
-	public static void main(final String[] args) {
+	public static void main(String[] args) {
 		BasicConfigurator.configure();
+
+		// args = new String[] { "D:\\Program Files\\VideoLAN\\VLC" };
+		// args = new String[] { "D:\\soft\\vlc\\vlc-2.2.1-win64" };
+		// args = new String[] { "D:\\soft\\vlc\\vlc-2.2.4-win64" };
+		if (args.length > 0) {
+			String livVlcPath = args[0];
+			NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), livVlcPath);
+			NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcCoreName(), livVlcPath);
+			// System.setProperty("jna.library.path", livVlcPath);
+			System.setProperty("VLC_PLUGIN_PATH", livVlcPath + "\\plugins");
+		} else {
+		}
 		new NativeDiscovery().discover();
+
+		// System.out.println(LibVlc.INSTANCE.libvlc_get_version());
 		SwingUtilities.invokeLater(new Runnable() {
 
 			public void run() {
 				// String mrl = "G:\\video\\無彩限のファントム·ワールド 02.mp4";
+				// File fileMrl = new File("E:\\AnimeShotSIte\\anime\\M\\命运之夜\\UBW\\[Kamigami] Fate stay night UBW - 03 [1080p x265 Ma10p FLAC Sub(Eng,Jap)].mkv");
+				// File fileMrl = new File("E:\\AnimeShotSIte\\anime\\C\\超时空要塞\\Δ\\[dmhy][Macross_Delta][18][x264_aac][GB_BIG5][1080P_mkv].mkv");
 				File fileMrl = new File("E:\\AnimeShotSIte\\anime\\M\\命运之夜\\UBW\\[Kamigami] Fate stay night UBW - 03 [1080p x265 Ma10p FLAC Sub(Eng,Jap)].mkv");
-
 				// MediaInfo mediaInfo = MediaInfo.mediaInfo(fileMrl.getAbsolutePath());
 				// System.out.println(mediaInfo.toString());
 
@@ -134,7 +152,8 @@ public class MeidaLoador {
 		startTime = new Date();
 
 		frame = new JFrame("Direct Media Player");
-		frame.setBounds(100, 100, width, height);
+		// frame.setBounds(100, 100, width, height);
+		frame.setBounds(100, 100, 1300, 800);
 		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		frame.addWindowListener(new WindowAdapter() {
 
@@ -146,12 +165,14 @@ public class MeidaLoador {
 		JPanel controlsPane = new JPanel();
 		JTextField seedInputField = new JTextField();
 		seedInputField.setBounds(0, 0, 200, 20);
-		seedInputField.setText("1000000");
+		seedInputField.setText("38000");
 		controlsPane.add(seedInputField);
 		JButton showVideoButton = new JButton("显示视频图像");
 		controlsPane.add(showVideoButton);
-		JButton seedInputButton = new JButton("Seek");
+		JButton seedInputButton = new JButton("SeekTime");
 		controlsPane.add(seedInputButton);
+		JButton seedPostionInputButton = new JButton("SeekPostion");
+		controlsPane.add(seedPostionInputButton);
 		JButton pauseButton = new JButton("Pause");
 		controlsPane.add(pauseButton);
 		JButton rewindButton = new JButton("Rewind");
@@ -176,14 +197,23 @@ public class MeidaLoador {
 		seedInputButton.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				mediaPlayerComponent.getMediaPlayer().setTime(Long.valueOf(seedInputField.getText()));
+				long value = Long.valueOf(seedInputField.getText());
+				setTime(value);
+			}
+		});
+
+		seedPostionInputButton.addActionListener(new ActionListener() {
+
+			public void actionPerformed(ActionEvent e) {
+				long value = Long.valueOf(seedInputField.getText());
+				mediaPlayerComponent.getMediaPlayer().setPosition(value * 1.0f / totalTime);
 			}
 		});
 
 		pauseButton.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent e) {
-				mediaPlayerComponent.getMediaPlayer().pause();
+				pause();
 			}
 		});
 
@@ -229,6 +259,10 @@ public class MeidaLoador {
 			protected RenderCallback onGetRenderCallback() {
 				return new TutorialRenderCallbackAdapter();
 			}
+
+			// protected String[] onGetMediaPlayerFactoryExtraArgs() {
+			// return new String[] { "--no-drop-late-frames", "--no-skip-frames", "--sout-ts-use-key-frames", "--grayscale"};
+			// }
 
 			@Override
 			public void display(DirectMediaPlayer mediaPlayer, Memory[] nativeBuffers, BufferFormat bufferFormat) {
@@ -303,10 +337,12 @@ public class MeidaLoador {
 
 			// 画图片
 			g2D = (Graphics2D) g;
-			g2D.drawImage(bufferedImage, null, 0, 0);
+			if (showVideoImageFlg) {
+				g2D.drawImage(bufferedImage, null, 0, 0);
+			}
 
 			// 输出信息
-			g2D.fillRect(0, 0, 200, 300);
+			g2D.fillRect(0, 0, 250, 300);
 			g2D.setColor(Color.white);
 			lineHeight = 0;
 			drawStringLine("totalTime: " + totalTime);
@@ -407,9 +443,7 @@ public class MeidaLoador {
 
 			checkRgbChangedAfterChangedOrWaitTime(mediaPlayer.getTime(), rgbBufferRef);
 
-			if (showVideoImageFlg) {
-				videoSurface.repaint();
-			}
+			videoSurface.repaint();
 		}
 	}
 
