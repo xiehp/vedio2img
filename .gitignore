@@ -18,3 +18,7 @@ MANIFEST.MF
 /*/target
 /*/.settings
 /*/logs
+
+
+# idea file
+*.iml
