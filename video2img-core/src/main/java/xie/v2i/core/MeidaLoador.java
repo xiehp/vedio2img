@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import com.sun.jna.Memory;
 import com.sun.jna.NativeLibrary;
 
-import uk.co.caprica.vlcj.binding.LibVlc;
 import uk.co.caprica.vlcj.component.DirectMediaPlayerComponent;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
 import uk.co.caprica.vlcj.player.MediaPlayer;
@@ -510,10 +509,10 @@ public class MeidaLoador {
 		}
 	}
 
-	public File saveImage() {
+	public File saveImage(File toFile) {
 		long time = mediaPlayerComponent.getMediaPlayer().getTime();
 		logger.debug("saveImage time: {}", time);
-		File file = CImage.saveImage(bufferedImage, time, new File("D:\\work\\temp\\bbb"));
+		File file = CImage.saveImage(bufferedImage, toFile);
 		return file;
 	}
 
