@@ -162,7 +162,6 @@ public class Video2Image {
 									time = config.startTime;
 								}
 
-								int totalTimeCount = 0;
 								int runCount = 0;
 
 								// 先随便指定一个时间

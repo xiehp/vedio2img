@@ -19,7 +19,6 @@ import uk.co.caprica.vlcj.player.MediaPlayer;
 import uk.co.caprica.vlcj.player.MediaPlayerEventAdapter;
 import uk.co.caprica.vlcj.player.media.Media;
 import uk.co.caprica.vlcj.player.media.callback.nonseekable.FileInputStreamMedia;
-import uk.co.caprica.vlcj.player.media.simple.SimpleMedia;
 
 public class UsingJavaIO {
 

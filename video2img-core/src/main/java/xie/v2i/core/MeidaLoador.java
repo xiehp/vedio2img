@@ -131,8 +131,8 @@ public class MeidaLoador {
 
 				// MeidaLoador meidaLoador = new MeidaLoador(fileMrl.getAbsolutePath(), 640,480);
 				MeidaLoador meidaLoador = new MeidaLoador(fileMrl.getAbsolutePath(), 1920, 1080);
-				// meidaLoador.setPlaySpeed(0.125f);
-				// meidaLoador.start();
+				//meidaLoador.setPlaySpeed(0.125f);
+				meidaLoador.start();
 			}
 		});
 	}
