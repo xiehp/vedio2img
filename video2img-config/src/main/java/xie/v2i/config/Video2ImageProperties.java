@@ -28,7 +28,7 @@ public class Video2ImageProperties {
 	/** 开始时间 */
 	public long startTime = 0;
 
-	/** 开始时间 */
+	/** 结束时间 */
 	public long endTime = 0;
 
 	/** 时间间隔 */

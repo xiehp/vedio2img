@@ -26,7 +26,7 @@
 
 	<dependencyManagement>
 		<dependencies>
-			<!-- junit-io -->
+			<!-- spring-io -->
 			<!-- 版本管理 -->
 			<dependency>
 				<groupId>xie</groupId>
