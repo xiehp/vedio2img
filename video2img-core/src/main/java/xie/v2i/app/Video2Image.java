@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
+import xie.common.exception.XRuntimeException;
 import xie.common.utils.XWaitTime;
 import xie.v2i.config.Video2ImageProperties;
 import xie.v2i.core.MeidaLoador;
@@ -232,10 +233,21 @@ public class Video2Image {
 											meidaLoador.setTime(time);
 										}
 
+										// 300秒没反应，判断截图数量，看是否符合预期，并结束循环
 										if (meidaLoador.getPastTime() > 300000) {
-											// 300秒没反应，关闭
-											logger.info("300秒没反应，关闭");
-											throw new RuntimeException("300秒没反应，关闭");
+											boolean isSuccess = false;
+											if (listener != null && Video2ImageProperties.RUN_MODE_INTERVAL.equals(config.runMode)) {
+												// 定时截图才需要判断
+												isSuccess = listener.canSuccessExit(config.timeInterval);
+											}
+
+											if (isSuccess) {
+												logger.info("300秒没反应，已截取完整，结束循环");
+												break;
+											} else {
+												logger.error("300秒没反应，未截取完整，抛出异常");
+												throw new XRuntimeException("300秒没反应，未截取完整，抛出异常");
+											}
 										}
 
 										Thread.sleep(200);
@@ -264,6 +276,7 @@ public class Video2Image {
 											}
 										}
 									} else {
+										logger.warn("未知截图方式,结束循环");
 										break;
 									}
 

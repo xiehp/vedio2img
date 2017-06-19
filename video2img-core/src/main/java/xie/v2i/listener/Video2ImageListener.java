@@ -14,6 +14,16 @@ public interface Video2ImageListener {
 	 */
 	void isRefreshedAfterChangeTime(long setTime, long originalTime, BufferedImage image);
 
+	/**
+	 * 设置视频总时间
+	 */
 	void setTotalTime(long totalTime);
+
+	/**
+	 * 遇到异常时，是否可以正常退出
+	 * 
+	 * @param timeInterval 截图定时间隔
+	 */
+	boolean canSuccessExit(long timeInterval);
 
 }

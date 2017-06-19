@@ -17,4 +17,9 @@ public abstract class Video2ImageAdapter implements Video2ImageListener {
 	public long getTotalTime() {
 		return totalTime;
 	}
+	
+	@Override
+	public boolean canSuccessExit(long timeInterval) {
+		return false;
+	}
 }
