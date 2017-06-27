@@ -465,6 +465,11 @@ public class MeidaLoador {
 						changedFlg = checkRgbChanged(preRgb, mediaRgbBufferRef, 13);
 					} else {
 						changedFlg = checkRgbChanged(preRgb, mediaRgbBufferRef, 1);
+
+						// 如果时间小于5秒，可能图像还处于黑色状态，直接返回改变信息
+						if (nowSetedTime <= 5000) {
+							changedFlg = true;
+						}
 					}
 				}
 
