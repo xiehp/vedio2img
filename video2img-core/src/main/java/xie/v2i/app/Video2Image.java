@@ -166,8 +166,10 @@ public class Video2Image {
 								int runCount = 0;
 
 								// 先随便指定一个时间
-								logger.info("开始处理前随便执行一个时间");
-								meidaLoador.setTime(4700);
+								logger.info("开始处理前随便执行一个时间,防止黑屏等待");
+								long half = meidaLoador.getTotalTime() / 2;
+								half = (half - half % 1000) + 473;
+								meidaLoador.setTime(half);
 								Thread.sleep(500);
 								while (true) {
 									if (meidaLoador.isRefreshedAfterChangeTime(meidaLoador.getTime())) {
