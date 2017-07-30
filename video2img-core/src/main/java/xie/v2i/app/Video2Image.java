@@ -293,6 +293,8 @@ public class Video2Image {
 									runCount++;
 								}
 
+								listener.onSuccessComplete();
+
 								isProcessSuccess = true;
 
 							} catch (InterruptedException e) {

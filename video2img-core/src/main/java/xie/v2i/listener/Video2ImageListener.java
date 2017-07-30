@@ -14,6 +14,13 @@ public interface Video2ImageListener {
 	 */
 	void isRefreshedAfterChangeTime(long setTime, long originalTime, BufferedImage image);
 
+	void onStart();
+
+	/**
+	 * 在成功退出的时候
+	 */
+	void onSuccessComplete();
+
 	/**
 	 * 设置视频总时间
 	 */
