@@ -6,8 +6,6 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -41,7 +39,7 @@ import xie.common.utils.XWaitChange;
 import xie.common.utils.XWaitTime;
 import xie.v2i.utils.CImage;
 
-public class MeidaLoador {
+public class MediaLoader {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -53,7 +51,7 @@ public class MeidaLoador {
 	private int[] rgbBufferRef;
 
 	private DirectMediaPlayerComponent mediaPlayerComponent;
-	private DirectMediaPlayer meidaLoador;
+	private DirectMediaPlayer mediaLoader;
 
 	private int width = 1280;
 
@@ -77,7 +75,7 @@ public class MeidaLoador {
 	/** 认为的超时时间之前，需要做某些事情，如超时之前需要判断图像是否已经发生变化 */
 	private long BEFORE_ON_DISPLAY_TIMEOUT_VALUE = ON_DISPLAY_TIMEOUT_VALUE - 5000;
 
-	private boolean isStopedFlg = true;
+	private boolean isStoppedFlg = true;
 
 	// 比较参数
 	/** 每次图像改变后，缓存该图像，留作和下一个图像比较用 */
@@ -85,7 +83,7 @@ public class MeidaLoador {
 	private boolean rgbBufferChangedFlg = false;
 
 	/** 当前设定的时间 */
-	private long nowSetedTime;
+	private long nowSettingTime;
 
 	// 测试参数
 	private int paintComponent = 0;
@@ -119,29 +117,26 @@ public class MeidaLoador {
 		new NativeDiscovery().discover();
 
 		// System.out.println(LibVlc.INSTANCE.libvlc_get_version());
-		SwingUtilities.invokeLater(new Runnable() {
+		SwingUtilities.invokeLater(() -> {
+			// String mrl = "G:\\video\\無彩限のファントム·ワールド 02.mp4";
+			// File fileMrl = new File("E:\\AnimeShotSIte\\anime\\M\\命运之夜\\UBW\\[Kamigami] Fate stay night UBW - 03 [1080p x265 Ma10p FLAC Sub(Eng,Jap)].mkv");
+			// File fileMrl = new File("E:\\AnimeShotSIte\\anime\\C\\超时空要塞\\Δ\\[dmhy][Macross_Delta][18][x264_aac][GB_BIG5][1080P_mkv].mkv");
+			File fileMrl = new File("E:\\AnimeShotSIte\\anime\\M\\命运之夜\\UBW\\[Kamigami] Fate stay night UBW - 03 [1080p x265 Ma10p FLAC Sub(Eng,Jap)].mkv");
+			// MediaInfo mediaInfo = MediaInfo.mediaInfo(fileMrl.getAbsolutePath());
+			// System.out.println(mediaInfo.toString());
 
-			public void run() {
-				// String mrl = "G:\\video\\無彩限のファントム·ワールド 02.mp4";
-				// File fileMrl = new File("E:\\AnimeShotSIte\\anime\\M\\命运之夜\\UBW\\[Kamigami] Fate stay night UBW - 03 [1080p x265 Ma10p FLAC Sub(Eng,Jap)].mkv");
-				// File fileMrl = new File("E:\\AnimeShotSIte\\anime\\C\\超时空要塞\\Δ\\[dmhy][Macross_Delta][18][x264_aac][GB_BIG5][1080P_mkv].mkv");
-				File fileMrl = new File("E:\\AnimeShotSIte\\anime\\M\\命运之夜\\UBW\\[Kamigami] Fate stay night UBW - 03 [1080p x265 Ma10p FLAC Sub(Eng,Jap)].mkv");
-				// MediaInfo mediaInfo = MediaInfo.mediaInfo(fileMrl.getAbsolutePath());
-				// System.out.println(mediaInfo.toString());
-
-				// MeidaLoador meidaLoador = new MeidaLoador(fileMrl.getAbsolutePath(), 640,480);
-				MeidaLoador meidaLoador = new MeidaLoador(fileMrl.getAbsolutePath(), 1920, 1080);
-				//meidaLoador.setPlaySpeed(0.125f);
-				meidaLoador.start();
-			}
+			// MediaLoader mediaLoader = new MediaLoader(fileMrl.getAbsolutePath(), 640,480);
+			MediaLoader mediaLoader = new MediaLoader(fileMrl.getAbsolutePath(), 1920, 1080);
+			//mediaLoader.setPlaySpeed(0.125f);
+			mediaLoader.start();
 		});
 	}
 
-	public MeidaLoador(String mrl) {
+	public MediaLoader(String mrl) {
 		init(mrl, 1280, 720);
 	}
 
-	public MeidaLoador(String mrl, int width, int height) {
+	public MediaLoader(String mrl, int width, int height) {
 		init(mrl, width, height);
 	}
 
@@ -170,7 +165,7 @@ public class MeidaLoador {
 		controlsPane.add(showVideoButton);
 		JButton seedInputButton = new JButton("SeekTime");
 		controlsPane.add(seedInputButton);
-		JButton seedPostionInputButton = new JButton("SeekPostion");
+		JButton seedPostionInputButton = new JButton("SeekPosition");
 		controlsPane.add(seedPostionInputButton);
 		JButton pauseButton = new JButton("Pause");
 		controlsPane.add(pauseButton);
@@ -182,76 +177,47 @@ public class MeidaLoador {
 		controlsPane.add(savePicButton);
 		frame.add(controlsPane, BorderLayout.SOUTH);
 
-		showVideoButton.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent e) {
-				if (showVideoImageFlg) {
-					showVideoImageFlg = false;
-				} else {
-					showVideoImageFlg = true;
-				}
+		showVideoButton.addActionListener(e -> {
+			if (showVideoImageFlg) {
+				showVideoImageFlg = false;
+			} else {
+				showVideoImageFlg = true;
 			}
 		});
 
-		seedInputButton.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent e) {
-				long value = Long.valueOf(seedInputField.getText());
-				setTime(value);
-			}
+		seedInputButton.addActionListener(e -> {
+			long value = Long.valueOf(seedInputField.getText());
+			setTime(value);
 		});
 
-		seedPostionInputButton.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent e) {
-				long value = Long.valueOf(seedInputField.getText());
-				mediaPlayerComponent.getMediaPlayer().setPosition(value * 1.0f / totalTime);
-			}
+		seedPostionInputButton.addActionListener(e -> {
+			long value = Long.valueOf(seedInputField.getText());
+			mediaPlayerComponent.getMediaPlayer().setPosition(value * 1.0f / totalTime);
 		});
 
-		pauseButton.addActionListener(new ActionListener() {
+		pauseButton.addActionListener(e -> pause());
 
-			public void actionPerformed(ActionEvent e) {
-				pause();
-			}
+		rewindButton.addActionListener(e -> {
+			long timeInputValue = Long.valueOf(seedInputField.getText());
+			mediaPlayerComponent.getMediaPlayer().skip(-timeInputValue);
+			System.out.println(mediaPlayerComponent.getMediaPlayer().getTime());
+			System.out.println(mediaPlayerComponent.getMediaPlayer().getPosition());
 		});
 
-		rewindButton.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent e) {
-				long timeInputValue = Long.valueOf(seedInputField.getText());
-				mediaPlayerComponent.getMediaPlayer().skip(-timeInputValue);
-				System.out.println(mediaPlayerComponent.getMediaPlayer().getTime());
-				System.out.println(mediaPlayerComponent.getMediaPlayer().getPosition());
-			}
+		skipButton.addActionListener(e -> {
+			long timeInputValue = Long.valueOf(seedInputField.getText());
+			mediaPlayerComponent.getMediaPlayer().skip(timeInputValue);
+			System.out.println(mediaPlayerComponent.getMediaPlayer().getTime());
+			System.out.println(mediaPlayerComponent.getMediaPlayer().getPosition());
 		});
 
-		skipButton.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent e) {
-				long timeInputValue = Long.valueOf(seedInputField.getText());
-				mediaPlayerComponent.getMediaPlayer().skip(timeInputValue);
-				System.out.println(mediaPlayerComponent.getMediaPlayer().getTime());
-				System.out.println(mediaPlayerComponent.getMediaPlayer().getPosition());
-			}
-		});
-
-		savePicButton.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent e) {
-				CImage.saveImage(bufferedImage, mediaPlayerComponent.getMediaPlayer().getTime(), new File("D:\\work\\temp\\bbb"));
-			}
-		});
+		savePicButton.addActionListener(e -> CImage.saveImage(bufferedImage, mediaPlayerComponent.getMediaPlayer().getTime(), new File("D:\\work\\temp\\bbb")));
 
 		videoSurface = new VideoSurfacePanel();
 		// frame.setContentPane(videoSurface);
 		frame.add(videoSurface, BorderLayout.CENTER);
 		bufferedImage = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration().createCompatibleImage(width, height);
-		BufferFormatCallback bufferFormatCallback = new BufferFormatCallback() {
-			public BufferFormat getBufferFormat(int sourceWidth, int sourceHeight) {
-				return new RV32BufferFormat(width, height);
-			}
-		};
+		BufferFormatCallback bufferFormatCallback = (sourceWidth, sourceHeight) -> new RV32BufferFormat(width, height);
 
 		mediaPlayerComponent = new DirectMediaPlayerComponent(bufferFormatCallback) {
 
@@ -265,7 +231,7 @@ public class MeidaLoador {
 
 			@Override
 			public void display(DirectMediaPlayer mediaPlayer, Memory[] nativeBuffers, BufferFormat bufferFormat) {
-				isStopedFlg = false;
+				isStoppedFlg = false;
 				super.display(mediaPlayer, nativeBuffers, bufferFormat);
 				mediaPlayerComponent_Display++;
 			}
@@ -289,7 +255,7 @@ public class MeidaLoador {
 
 			@Override
 			public void stopped(MediaPlayer mediaPlayer) {
-				isStopedFlg = true;
+				isStoppedFlg = true;
 				super.stopped(mediaPlayer);
 
 			}
@@ -301,13 +267,13 @@ public class MeidaLoador {
 
 			@Override
 			public void playing(MediaPlayer mediaPlayer) {
-				isStopedFlg = false;
+				isStoppedFlg = false;
 			}
 		};
 
 		frame.setVisible(true);
 		mediaPlayerComponent.getMediaPlayer().playMedia(mrl);
-		meidaLoador = mediaPlayerComponent.getMediaPlayer();
+		mediaLoader = mediaPlayerComponent.getMediaPlayer();
 	}
 
 	private class VideoSurfacePanel extends JPanel {
@@ -352,7 +318,7 @@ public class MeidaLoador {
 			drawStringLine("paintComponent: " + paintComponent);
 			drawStringLine("onDisplay: " + onDisplay);
 			drawStringLine("display: " + display);
-			drawStringLine("nowSetedTime: " + nowSetedTime);
+			drawStringLine("nowSettingTime: " + nowSettingTime);
 			drawStringLine("getMediaPlayer().getTime(): " + mediaPlayerComponent.getMediaPlayer().getTime());
 			drawStringLine("preTime: " + preTime);
 			drawStringLine("timeChanged: " + timeChanged);
@@ -373,7 +339,7 @@ public class MeidaLoador {
 			drawStringLine("rgbBufferChangedFlg: " + rgbBufferChangedFlg);
 			drawStringLine("mediaPlayerComponent_Display: " + mediaPlayerComponent_Display);
 
-			drawStringLine("isStopedFlg: " + isStopedFlg);
+			drawStringLine("isStoppedFlg: " + isStoppedFlg);
 			drawStringLine("isDoPauseActionFlg: " + isDoPauseActionFlg);
 			drawStringLine("showVideoImageFlg: " + showVideoImageFlg);
 
@@ -383,7 +349,6 @@ public class MeidaLoador {
 			// // System.out.println(paintComponent + ".jpg");
 			// // }
 			// } catch (Exception e) {
-			// // TODO Auto-generated catch block
 			// System.out.println(paintComponent + ".jpg");
 			// e.printStackTrace();
 			// }
@@ -467,7 +432,7 @@ public class MeidaLoador {
 						changedFlg = checkRgbChanged(preRgb, mediaRgbBufferRef, 1);
 
 						// 如果时间小于5秒，可能图像还处于黑色状态，直接返回改变信息
-						if (nowSetedTime <= 5000) {
+						if (nowSettingTime <= 5000) {
 							changedFlg = true;
 						}
 					}
@@ -475,7 +440,7 @@ public class MeidaLoador {
 
 				if (changedFlg) {
 					System.arraycopy(mediaRgbBufferRef, 0, preRgb, 0, mediaRgbBufferRef.length);
-					logger.info("图像已改变, setTime:{}, mediaTime:{}", nowSetedTime, mediaTime);
+					logger.info("图像已改变, setTime:{}, mediaTime:{}", nowSettingTime, mediaTime);
 					rgbBufferChangedFlg = true;
 				}
 			}
@@ -562,7 +527,7 @@ public class MeidaLoador {
 		rgbBufferChangedFlg = false;
 
 		// 设置时间
-		nowSetedTime = time;
+		nowSettingTime = time;
 		mediaPlayerComponent.getMediaPlayer().setTime(time);
 
 		// 重置参数
@@ -606,7 +571,7 @@ public class MeidaLoador {
 	}
 
 	public boolean isStoped() {
-		return isStopedFlg;
+		return isStoppedFlg;
 	}
 
 	/**
@@ -636,26 +601,26 @@ public class MeidaLoador {
 	 * 关闭字幕
 	 */
 	public void closeSubtitle() {
-		meidaLoador.setSpu(-1);
+		mediaLoader.setSpu(-1);
 	}
 
 	/**
 	 * 设置播放速度
 	 */
 	public void setPlaySpeed(float speed) {
-		meidaLoador.setRate(speed);
+		mediaLoader.setRate(speed);
 	}
 
 	/**
 	 * 通过直接播放到指定时间<br>
 	 * PS:超过一定时间自动暂停<br>
 	 * PS:由于1080P播放速度问题，速度调整为1/4，因此超时时间也相应增加4倍<br>
-	 * 
-	 * @param skipTime
+	 *
+	 * @param specialTime
 	 * @throws InterruptedException
 	 */
 	public void playToSpecialTime(long specialTime) throws InterruptedException {
-		long beforeSkipTime = meidaLoador.getTime();
+		long beforeSkipTime = mediaLoader.getTime();
 		long skipTime = specialTime - beforeSkipTime;
 		logger.warn("开始调整时间到{}, 当前时间点{}, 需要调整时间{}", specialTime, beforeSkipTime, skipTime);
 		if (skipTime < 100) {
@@ -666,18 +631,18 @@ public class MeidaLoador {
 		// 关闭字幕，播放速度调整为1/4
 		closeSubtitle();
 
-		meidaLoador.start();
+		mediaLoader.start();
 		XWaitTime playWaitTime = new XWaitTime(skipTime * 8 + 2500);
 		while (true) {
-			if (specialTime - meidaLoador.getTime() < 100) {
+			if (specialTime - mediaLoader.getTime() < 100) {
 				logger.info("达到时间，停止", skipTime);
-				meidaLoador.pause();
+				mediaLoader.pause();
 				Thread.sleep(2000);
 				break;
 			}
 			if (playWaitTime.isTimeout()) {
 				logger.warn("超时直接停止", skipTime);
-				meidaLoador.pause();
+				mediaLoader.pause();
 				Thread.sleep(2000);
 				break;
 			}

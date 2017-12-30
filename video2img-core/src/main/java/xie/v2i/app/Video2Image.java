@@ -1,23 +1,28 @@
 package xie.v2i.app;
 
-import javax.swing.SwingUtilities;
+import java.io.File;
+
+import javax.swing.*;
 
 import org.apache.log4j.BasicConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import uk.co.caprica.vlcj.discovery.NativeDiscovery;
+import com.sun.jna.NativeLibrary;
+
+import uk.co.caprica.vlcj.binding.LibVlc;
+import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 import xie.common.exception.XRuntimeException;
 import xie.common.utils.XWaitTime;
 import xie.v2i.config.Video2ImageProperties;
-import xie.v2i.core.MeidaLoador;
+import xie.v2i.core.MediaLoader;
 import xie.v2i.listener.Video2ImageListener;
 
 public class Video2Image {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-	private MeidaLoador meidaLoador;
+	private MediaLoader mediaLoader;
 
 	/** 监听事件 */
 	private Video2ImageListener listener;
@@ -112,208 +117,225 @@ public class Video2Image {
 		config.specifyTimes = specifyTimes;
 	}
 
+
+	private static String NATIVE_LIBRARY_SEARCH_PATH = "D:\\work\\workspace\\github\\AnimeShotSiteProject\\video2image\\video2img-core\\vlc64";
+	private void loadVlc() {
+		BasicConfigurator.configure();
+
+		// 自动搜索
+//		boolean found = new NativeDiscovery().discover();
+//		System.out.println(found);
+//		if (found) {
+//			System.out.println(LibVlc.INSTANCE.libvlc_get_version());
+//		}
+
+		// 指定目录
+		NATIVE_LIBRARY_SEARCH_PATH = System.getProperty("user.dir") + File.separator +"vlc64";
+		NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), NATIVE_LIBRARY_SEARCH_PATH);
+		System.out.println(LibVlc.INSTANCE.libvlc_get_version());
+	}
+
 	public void run() {
+		loadVlc();
+
+
 
 		isProcessing = true;
 		isProcessSuccess = false;
 
-		BasicConfigurator.configure();
-		new NativeDiscovery().discover();
+		SwingUtilities.invokeLater(() -> {
+			try {
+				if (!new File(mrl).exists()) {
+					logger.info("文件不存在，" + mrl);
+					//throw new FileNotFoundException("文件不存在，" + mrl);
+				}
 
-		SwingUtilities.invokeLater(new Runnable() {
+				mediaLoader = new MediaLoader(mrl, config.width, config.height);
 
-			public void run() {
-				try {
-					meidaLoador = new MeidaLoador(mrl, config.width, config.height);
+				Thread thread = new Thread(() -> {
+					try {
+						logger.info("视频截图处理程序开始执行");
 
-					Thread thread = new Thread(new Runnable() {
-						public void run() {
+						while (!mediaLoader.isVideoLoaded()) {
+							logger.info("视频未载入。");
+							Thread.sleep(100);
+						}
+						logger.info("视频已载入。");
+						Thread.sleep(2000);
 
-							try {
-								logger.info("视频截图处理程序开始执行");
+						logger.info("开始处理前暂停视频");
+						mediaLoader.pause();
+						logger.info("已执行 mediaLoader.pause()");
 
-								while (!meidaLoador.isVideoLoaded()) {
-									logger.info("视频未载入。");
-									Thread.sleep(100);
-								}
-								logger.info("视频已载入。");
-								Thread.sleep(2000);
+						XWaitTime xWaitTime = new XWaitTime(20000);
+						while (!mediaLoader.isDoPauseAction()) {
+							if (xWaitTime.isTimeout()) {
+								logger.error("载入后暂停视频超时");
+								break;
+							}
 
-								logger.info("开始处理前暂停视频");
-								meidaLoador.pause();
-								logger.info("已执行 meidaLoador.pause()");
+							Thread.sleep(100);
+						}
 
-								XWaitTime xWaitTime = new XWaitTime(20000);
-								while (!meidaLoador.isDoPauseAction()) {
-									if (xWaitTime.isTimeout()) {
-										logger.error("载入后暂停视频超时");
-										break;
-									}
+						long time = config.startTime;
+						if (Video2ImageProperties.RUN_MODE_INTERVAL.equals(config.runMode)) {
+							time = config.startTime;
+						} else if (Video2ImageProperties.RUN_MODE_SPECIAL.equals(config.runMode)) {
+							// 指定第一个
+							time = config.specifyTimes[0];
+						} else {
+							time = config.startTime;
+						}
 
-									Thread.sleep(100);
-								}
+						int runCount = 0;
 
-								long time = config.startTime;
-								if (Video2ImageProperties.RUN_MODE_INTERVAL.equals(config.runMode)) {
-									time = config.startTime;
-								} else if (Video2ImageProperties.RUN_MODE_SPECIAL.equals(config.runMode)) {
-									// 指定第一个
-									time = config.specifyTimes[0];
-								} else {
-									time = config.startTime;
-								}
-
-								int runCount = 0;
-
-								// 先随便指定一个时间
-								logger.info("开始处理前随便执行一个时间,防止黑屏等待");
-								long half = meidaLoador.getTotalTime() / 2;
-								half = (half - half % 1000) + 473;
-								meidaLoador.setTime(half);
+						// 先随便指定一个时间
+						logger.info("开始处理前随便执行一个时间,防止黑屏等待");
+						long half = mediaLoader.getTotalTime() / 2;
+						half = (half - half % 1000) + 473;
+						mediaLoader.setTime(half);
+						Thread.sleep(500);
+						while (true) {
+							if (mediaLoader.isRefreshedAfterChangeTime(mediaLoader.getTime())) {
+								break;
+							}
+							if (mediaLoader.isOnDisplayTimeoutFlg()) {
+								logger.error("视频初始化设置时间超时，继续开始截图。");
 								Thread.sleep(500);
-								while (true) {
-									if (meidaLoador.isRefreshedAfterChangeTime(meidaLoador.getTime())) {
-										break;
-									}
-									if (meidaLoador.isOnDisplayTimeoutFlg()) {
-										logger.error("视频初始化设置时间超时，继续开始截图。");
-										Thread.sleep(500);
-										break;
-									}
-									Thread.sleep(100);
-								}
+								break;
+							}
+							Thread.sleep(100);
+						}
 
-								logger.info("开始截图循环处理");
-								// 开始截图
-								while (true) {
-									// 设置截图时间
-									meidaLoador.setTime(time);
+						logger.info("开始截图循环处理");
+						// 开始截图
+						while (true) {
+							// 设置截图时间
+							mediaLoader.setTime(time);
 
-									// 进行截图
-									while (true) {
-										if (meidaLoador.isRefreshedAfterChangeTime(meidaLoador.getTime())) {
-											// meidaLoador.saveImage();
-											if (listener != null) {
-												listener.setTotalTime(meidaLoador.getTotalTime());
-												try {
-													// 如果当前真实视频时间在设定时间0.5秒之前，则执行播放操作
-													long difTime = time - meidaLoador.getTime();
-													if (difTime > 500) {
-														logger.warn("当前真实视频时间在设定时间{}秒之前，开始播放调整视频", difTime);
-														meidaLoador.playToSpecialTime(time);
-														meidaLoador.updateRgbToPre();
-													}
-
-													// 执行截图
-													listener.isRefreshedAfterChangeTime(time, meidaLoador.getTime(), meidaLoador.getBufferedImage());
-												} catch (Exception e) {
-													throw e;
-												}
-											} else {
-												// 测试用
-												Thread.sleep(2000);
-											}
-											break;
-										}
-
-										if (meidaLoador.isStoped()) {
-											logger.warn("meidaLoador 发生了主动停止。");
-											break;
-										}
-
-										// 截图超时，则重新开始暂停
-										if (meidaLoador.isOnDisplayTimeoutFlg()) {
-											logger.warn("截图发生超时，发送开始命令");
-											meidaLoador.start();
-											Thread.sleep(10000);
-
-											logger.warn("截图发生超时，发送暂停命令");
-											meidaLoador.pause();
-											Thread.sleep(10000);
-
-											logger.warn("截图发生超时，重新设置时间");
-											meidaLoador.setTime(time);
-										}
-
-										// 300秒没反应，判断截图数量，看是否符合预期，并结束循环
-										if (meidaLoador.getPastTime() > 300000) {
-											boolean isSuccess = false;
-											if (listener != null && Video2ImageProperties.RUN_MODE_INTERVAL.equals(config.runMode)) {
-												// 定时截图才需要判断
-												isSuccess = listener.canSuccessExit(config.timeInterval);
+							// 进行截图
+							while (true) {
+								if (mediaLoader.isRefreshedAfterChangeTime(mediaLoader.getTime())) {
+									// mediaLoader.saveImage();
+									if (listener != null) {
+										listener.setTotalTime(mediaLoader.getTotalTime());
+										try {
+											// 如果当前真实视频时间在设定时间0.5秒之前，则执行播放操作
+											long difTime = time - mediaLoader.getTime();
+											if (difTime > 500) {
+												logger.warn("当前真实视频时间在设定时间{}秒之前，开始播放调整视频", difTime);
+												mediaLoader.playToSpecialTime(time);
+												mediaLoader.updateRgbToPre();
 											}
 
-											if (isSuccess) {
-												logger.info("300秒没反应，已截取完整，结束循环");
-												break;
-											} else {
-												logger.error("300秒没反应，未截取完整，抛出异常");
-												throw new XRuntimeException("300秒没反应，未截取完整，抛出异常");
-											}
-										}
-
-										Thread.sleep(200);
-									}
-
-									if (Video2ImageProperties.RUN_MODE_SPECIAL.equals(config.runMode)) {
-										// 判断是否是最后一个指定时间
-										if (config.specifyTimes.length <= runCount + 1) {
-											// 截图循环结束
-											logger.info("已经是最后一个指定时间,结束循环");
-											break;
-										}
-
-										// 指定下一个
-										time = config.specifyTimes[runCount + 1];
-									} else if (Video2ImageProperties.RUN_MODE_INTERVAL.equals(config.runMode)) {
-										// 下一个时间
-										time += config.timeInterval;
-
-										if (config.endTime > 0) {
-											// 判断下一个时间是否超出结束时间
-											if (time > config.endTime) {
-												// 截图循环结束
-												logger.info("下一个时间超出结束时间,结束循环");
-												break;
-											}
+											// 执行截图
+											listener.isRefreshedAfterChangeTime(time, mediaLoader.getTime(), mediaLoader.getBufferedImage());
+										} catch (Exception e) {
+											throw e;
 										}
 									} else {
-										logger.warn("未知截图方式,结束循环");
-										break;
+										// 测试用
+										Thread.sleep(2000);
 									}
-
-									// 判断是否已经超出视频总时间
-									long totalTime = meidaLoador.getTotalTime();
-									if (totalTime > 0 && time >= totalTime) {
-										// 截图循环结束
-										logger.info("已经超出视频总时间,结束循环");
-										break;
-									}
-
-									runCount++;
+									break;
 								}
 
-								listener.onSuccessComplete();
+								if (mediaLoader.isStoped()) {
+									logger.warn("mediaLoader 发生了主动停止。");
+									break;
+								}
 
-								isProcessSuccess = true;
+								// 截图超时，则重新开始暂停
+								if (mediaLoader.isOnDisplayTimeoutFlg()) {
+									logger.warn("截图发生超时，发送开始命令");
+									mediaLoader.start();
+									Thread.sleep(10000);
 
-							} catch (InterruptedException e) {
-								logger.error(e.toString(), e);
-							} catch (Exception e) {
-								logger.error(e.toString(), e);
-							} finally {
-								closeMediaLoader();
+									logger.warn("截图发生超时，发送暂停命令");
+									mediaLoader.pause();
+									Thread.sleep(10000);
+
+									logger.warn("截图发生超时，重新设置时间");
+									mediaLoader.setTime(time);
+								}
+
+								// 300秒没反应，判断截图数量，看是否符合预期，并结束循环
+								if (mediaLoader.getPastTime() > 300000) {
+									boolean isSuccess = false;
+									if (listener != null && Video2ImageProperties.RUN_MODE_INTERVAL.equals(config.runMode)) {
+										// 定时截图才需要判断
+										isSuccess = listener.canSuccessExit(config.timeInterval);
+									}
+
+									if (isSuccess) {
+										logger.info("300秒没反应，已截取完整，结束循环");
+										break;
+									} else {
+										logger.error("300秒没反应，未截取完整，抛出异常");
+										throw new XRuntimeException("300秒没反应，未截取完整，抛出异常");
+									}
+								}
+
+								Thread.sleep(200);
 							}
+
+							if (Video2ImageProperties.RUN_MODE_SPECIAL.equals(config.runMode)) {
+								// 判断是否是最后一个指定时间
+								if (config.specifyTimes.length <= runCount + 1) {
+									// 截图循环结束
+									logger.info("已经是最后一个指定时间,结束循环");
+									break;
+								}
+
+								// 指定下一个
+								time = config.specifyTimes[runCount + 1];
+							} else if (Video2ImageProperties.RUN_MODE_INTERVAL.equals(config.runMode)) {
+								// 下一个时间
+								time += config.timeInterval;
+
+								if (config.endTime > 0) {
+									// 判断下一个时间是否超出结束时间
+									if (time > config.endTime) {
+										// 截图循环结束
+										logger.info("下一个时间超出结束时间,结束循环");
+										break;
+									}
+								}
+							} else {
+								logger.warn("未知截图方式,结束循环");
+								break;
+							}
+
+							// 判断是否已经超出视频总时间
+							long totalTime = mediaLoader.getTotalTime();
+							if (totalTime > 0 && time >= totalTime) {
+								// 截图循环结束
+								logger.info("已经超出视频总时间,结束循环");
+								break;
+							}
+
+							runCount++;
 						}
-					});
 
-					thread.start();
+						listener.onSuccessComplete();
 
-				} catch (Exception e) {
-					logger.debug(e.toString(), e);
+						isProcessSuccess = true;
 
-					// closeMediaLoader();
-				}
+					} catch (InterruptedException e) {
+						logger.error("接收到中断请求：", e);
+					} catch (Exception e) {
+						logger.error(e.toString(), e);
+					} finally {
+						closeMediaLoader();
+					}
+				});
+
+				thread.start();
+
+			} catch (Exception e) {
+				logger.debug(e.toString(), e);
+
+				// closeMediaLoader();
 			}
 		});
 	}
@@ -326,10 +348,10 @@ public class Video2Image {
 	/**
 	 * 是否正在处理
 	 * 
-	 * @return
+	 * @return 是否正在处理
 	 */
 	public boolean isProcessing() {
-		return isProcessing || meidaLoador.isPlaying();
+		return isProcessing || mediaLoader.isPlaying();
 	}
 
 	public boolean isProcessSuccess() {
@@ -337,10 +359,10 @@ public class Video2Image {
 	}
 
 	public void closeMediaLoader() {
-		// meidaLoador.stop();
+		// mediaLoader.stop();
 		logger.info("closeMediaLoader begin");
-		meidaLoador.release();
-		meidaLoador.dispose();
+		mediaLoader.release();
+		mediaLoader.dispose();
 		isProcessing = false;
 		logger.info("closeMediaLoader end");
 	}
