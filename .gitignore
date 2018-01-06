@@ -22,3 +22,10 @@ MANIFEST.MF
 
 # idea file
 *.iml
+
+
+
+
+# vlc нд╪Ч
+/**/vlc64/
+vlc64
