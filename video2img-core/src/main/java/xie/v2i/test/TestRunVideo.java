@@ -30,14 +30,14 @@ public class TestRunVideo {
 			Video2ImageDoNotingListener saveImageListener = new Video2ImageDoNotingListener(2000);
 			// File fileMrl = new File("F:\\AnimeShotSite\\anime\\2016\\美少女战士\\Crystal\\资源\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB]\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB][1080p x264 AAC][036B4C1E].mp4");
 			// File fileMrl = new File("E:\\AnimeShotSIte\\anime\\G\\干物妹！小埋\\[Kamigami] Himouto! Umaru-chan - 05 [1920x1080 x264 AAC Sub(Chs,Cht,Jap)].mkv");
-			File fileMrl = new File("E:\\AnimeShotSIte\\anime\\M\\命运之夜\\UBW\\[Kamigami] Fate stay night UBW - 03 [1080p x265 Ma10p FLAC Sub(Eng,Jap)].mkv");
+			File fileMrl = new File("G:\\video\\[LoliHouse] Violet Evergarden - CM01 [WebRip 1920x1080 HEVC-yuv420p10 AAC ASS].mkv");
 
 			Video2Image video2Image = new Video2Image(fileMrl.getAbsolutePath(), saveImageListener);
 			video2Image.setRunMode(Video2ImageProperties.RUN_MODE_INTERVAL);
 			// video2Image.setRunMode(Video2ImageProperties.RUN_MODE_SPECIAL);
-			Long startTime = 35000L;
-			Long endTime = 2000000L;
-			Long interval = 5000L;
+			Long startTime = null;
+			Long endTime = null;
+			Long interval = 1000L;
 			if (interval != null) {
 				video2Image.setTimeInterval(interval);
 			}

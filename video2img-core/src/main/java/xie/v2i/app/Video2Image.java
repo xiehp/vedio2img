@@ -130,9 +130,10 @@ public class Video2Image {
 //		}
 
 		// 指定目录
-		NATIVE_LIBRARY_SEARCH_PATH = System.getProperty("user.dir") + File.separator +"vlc64";
+		String userDir = System.getProperty("user.dir") + File.separator +"vlc64";
 		NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), NATIVE_LIBRARY_SEARCH_PATH);
-		System.out.println(LibVlc.INSTANCE.libvlc_get_version());
+		NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), userDir);
+		logger.info(LibVlc.INSTANCE.libvlc_get_version());
 	}
 
 	public void run() {
@@ -317,7 +318,9 @@ public class Video2Image {
 							runCount++;
 						}
 
-						listener.onSuccessComplete();
+						if (listener != null) {
+							listener.onSuccessComplete();
+						}
 
 						isProcessSuccess = true;
 
@@ -341,7 +344,7 @@ public class Video2Image {
 	}
 
 	public static void main(String[] args) {
-		Video2Image video2Image = new Video2Image("G:\\video\\無彩限のファントム·ワールド 02.mp4");
+		Video2Image video2Image = new Video2Image("G:\\video\\[LoliHouse] Violet Evergarden - CM01 [WebRip 1920x1080 HEVC-yuv420p10 AAC ASS].mkv");
 		video2Image.run();
 	}
 
