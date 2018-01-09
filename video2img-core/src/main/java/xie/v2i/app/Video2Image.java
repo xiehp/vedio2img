@@ -131,8 +131,9 @@ public class Video2Image {
 
 		// 指定目录
 		String userDir = System.getProperty("user.dir") + File.separator +"vlc64";
-		NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), NATIVE_LIBRARY_SEARCH_PATH);
-		NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), userDir);
+		//NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), NATIVE_LIBRARY_SEARCH_PATH);
+		//NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), userDir);
+		NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), "D:\\soft\\vlc\\vlc-2.2.8");
 		logger.info(LibVlc.INSTANCE.libvlc_get_version());
 	}
 

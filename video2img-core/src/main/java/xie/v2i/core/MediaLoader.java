@@ -10,7 +10,10 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -25,9 +28,11 @@ import org.slf4j.LoggerFactory;
 import com.sun.jna.Memory;
 import com.sun.jna.NativeLibrary;
 
+import uk.co.caprica.vlcj.binding.LibVlc;
 import uk.co.caprica.vlcj.component.DirectMediaPlayerComponent;
 import uk.co.caprica.vlcj.discovery.NativeDiscovery;
 import uk.co.caprica.vlcj.player.MediaPlayer;
+import uk.co.caprica.vlcj.player.MediaPlayerFactory;
 import uk.co.caprica.vlcj.player.direct.BufferFormat;
 import uk.co.caprica.vlcj.player.direct.BufferFormatCallback;
 import uk.co.caprica.vlcj.player.direct.DirectMediaPlayer;
@@ -165,14 +170,16 @@ public class MediaLoader {
 		controlsPane.add(showVideoButton);
 		JButton seedInputButton = new JButton("SeekTime");
 		controlsPane.add(seedInputButton);
-		JButton seedPostionInputButton = new JButton("SeekPosition");
-		controlsPane.add(seedPostionInputButton);
+		JButton seedPositionInputButton = new JButton("SeekPosition");
+		controlsPane.add(seedPositionInputButton);
 		JButton pauseButton = new JButton("Pause");
 		controlsPane.add(pauseButton);
 		JButton rewindButton = new JButton("Rewind");
 		controlsPane.add(rewindButton);
 		JButton skipButton = new JButton("Skip");
 		controlsPane.add(skipButton);
+		JButton nextFrameButton = new JButton("Next Frame");
+		controlsPane.add(nextFrameButton);
 		JButton savePicButton = new JButton("save pic");
 		controlsPane.add(savePicButton);
 		frame.add(controlsPane, BorderLayout.SOUTH);
@@ -190,7 +197,7 @@ public class MediaLoader {
 			setTime(value);
 		});
 
-		seedPostionInputButton.addActionListener(e -> {
+		seedPositionInputButton.addActionListener(e -> {
 			long value = Long.valueOf(seedInputField.getText());
 			mediaPlayerComponent.getMediaPlayer().setPosition(value * 1.0f / totalTime);
 		});
@@ -211,6 +218,12 @@ public class MediaLoader {
 			System.out.println(mediaPlayerComponent.getMediaPlayer().getPosition());
 		});
 
+		nextFrameButton.addActionListener(e -> {
+			mediaPlayerComponent.getMediaPlayer().nextFrame();
+			System.out.println(mediaPlayerComponent.getMediaPlayer().getTime());
+			System.out.println(mediaPlayerComponent.getMediaPlayer().getPosition());
+		});
+
 		savePicButton.addActionListener(e -> CImage.saveImage(bufferedImage, mediaPlayerComponent.getMediaPlayer().getTime(), new File("D:\\work\\temp\\bbb")));
 
 		videoSurface = new VideoSurfacePanel();
@@ -220,6 +233,35 @@ public class MediaLoader {
 		BufferFormatCallback bufferFormatCallback = (sourceWidth, sourceHeight) -> new RV32BufferFormat(width, height);
 
 		mediaPlayerComponent = new DirectMediaPlayerComponent(bufferFormatCallback) {
+
+			protected MediaPlayerFactory onGetMediaPlayerFactory() {
+				String[] args = onGetMediaPlayerFactoryArgs();
+				String[] extraArgs = onGetMediaPlayerFactoryExtraArgs();
+				if (extraArgs != null && extraArgs.length > 0) {
+					List<String> combinedArgs = new ArrayList<String>(args.length + extraArgs.length);
+					combinedArgs.addAll(Arrays.asList(args));
+					combinedArgs.addAll(Arrays.asList(extraArgs));
+					args = combinedArgs.toArray(args);
+				}
+				logger.debug("args={}", Arrays.toString(args));
+				return new MyMediaPlayerFactory(args);
+			}
+
+			@Override
+			protected String[] onGetMediaPlayerFactoryExtraArgs() {
+				return new String[]{
+						//"--no-video",
+//						"--logfile=D:\\temp\\vlc.log",
+//						"--aspect-ratio=4:3",
+//						"--mirror-split=1",
+//						"--hevc-force-fps=4",
+//						"--no-grayscale", // 灰度视频输出 (默认关闭)
+//						"--no-input-fast-seek",
+//						"--input-repeat=5",
+//						"--start-time=1.1",
+//						"--stop-time==3.1"
+				};
+			}
 
 			protected RenderCallback onGetRenderCallback() {
 				return new TutorialRenderCallbackAdapter();
@@ -270,6 +312,10 @@ public class MediaLoader {
 				isStoppedFlg = false;
 			}
 		};
+
+		MyMediaPlayerFactory myMediaPlayerFactory = (MyMediaPlayerFactory) mediaPlayerComponent.getMediaPlayerFactory();
+		logger.info("libvlc的版本：{}", myMediaPlayerFactory.getLibvlc().libvlc_get_version());
+		logger.info("使用的解码器：{}", myMediaPlayerFactory.getLibvlc().libvlc_get_compiler());
 
 		frame.setVisible(true);
 		mediaPlayerComponent.getMediaPlayer().playMedia(mrl);
@@ -588,7 +634,7 @@ public class MediaLoader {
 	}
 
 	public void release() {
-		mediaPlayerComponent.release();
+		mediaPlayerComponent.release(true);
 		isVideoLoaded = false;
 	}
 
