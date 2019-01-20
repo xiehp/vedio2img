@@ -72,6 +72,7 @@ public class MediaLoader {
 
 	/** 判断视频帧是否已经改变或者超时 */
 	private XWaitChange xWaitChange = new XWaitChange(0);
+	private XWaitTime checkRate = new XWaitTime(200);
 
 	/** 视频帧是否已经可用 当前该判断用于是否超时 */
 	private boolean isOnDisplayTimeoutFlg = false;
@@ -132,7 +133,7 @@ public class MediaLoader {
 
 			// MediaLoader mediaLoader = new MediaLoader(fileMrl.getAbsolutePath(), 640,480);
 			MediaLoader mediaLoader = new MediaLoader(fileMrl.getAbsolutePath(), 1920, 1080);
-			//mediaLoader.setPlaySpeed(0.125f);
+			// mediaLoader.setPlaySpeed(0.125f);
 			mediaLoader.start();
 		});
 	}
@@ -249,17 +250,17 @@ public class MediaLoader {
 
 			@Override
 			protected String[] onGetMediaPlayerFactoryExtraArgs() {
-				return new String[]{
-						//"--no-video",
-//						"--logfile=D:\\temp\\vlc.log",
-//						"--aspect-ratio=4:3",
-//						"--mirror-split=1",
-//						"--hevc-force-fps=4",
-//						"--no-grayscale", // 灰度视频输出 (默认关闭)
-//						"--no-input-fast-seek",
-//						"--input-repeat=5",
-//						"--start-time=1.1",
-//						"--stop-time==3.1"
+				return new String[] {
+						// "--no-video",
+						// "--logfile=D:\\temp\\vlc.log",
+						// "--aspect-ratio=4:3",
+						// "--mirror-split=1",
+						// "--hevc-force-fps=4",
+						// "--no-grayscale", // 灰度视频输出 (默认关闭)
+						// "--no-input-fast-seek",
+						// "--input-repeat=5",
+						// "--start-time=1.1",
+						// "--stop-time==3.1"
 				};
 			}
 
@@ -463,7 +464,23 @@ public class MediaLoader {
 			return;
 		}
 
-		if (xWaitChange.isChanged(mediaTime) || xWaitChange.getPastTime() > BEFORE_ON_DISPLAY_TIMEOUT_VALUE) {
+		// 检查图像改变的抽样
+		int checkStep = 999;
+		if (xWaitChange.getPastTime() > BEFORE_ON_DISPLAY_TIMEOUT_VALUE) {
+			// 超时，则检查所有图像上的点
+			checkStep = 1;
+		} else if (xWaitChange.isChanged(mediaTime)) {
+			// 播放器返回的时间改变了，PS：最新版返回的时间不会再改变，因此该条将无效
+			checkStep = 13;
+		} else if (checkRate.isTimeout()) {
+			// 由于xWaitChange.isChanged(mediaTime)可能无效，因此改为每秒check一次
+			checkStep = 100;
+			checkRate.setTimeout(checkRate.getTimeout() + 500);
+		}
+
+		if (checkStep < 999) {
+			checkRate.resetNowtime();
+			checkRate.setTimeout(200);
 			if (!rgbBufferChangedFlg) {
 				boolean changedFlg = false;
 				// 如果图片没有改变过， 则先将当前图像进行复制
@@ -472,15 +489,11 @@ public class MediaLoader {
 					changedFlg = true;
 				} else {
 					// 还未超时，只判断图像的一部分，超时后，判断完整图像
-					if (xWaitChange.getPastTime() < BEFORE_ON_DISPLAY_TIMEOUT_VALUE) {
-						changedFlg = checkRgbChanged(preRgb, mediaRgbBufferRef, 13);
-					} else {
-						changedFlg = checkRgbChanged(preRgb, mediaRgbBufferRef, 1);
-
-						// 如果时间小于5秒，可能图像还处于黑色状态，直接返回改变信息
-						if (nowSettingTime <= 5000) {
-							changedFlg = true;
-						}
+					changedFlg = checkRgbChanged(preRgb, mediaRgbBufferRef, checkStep);
+					if (nowSettingTime <= 5000) {
+						// 如果设定的播放时间小于5秒，可能图像还处于黑色状态，则直接返回改变信息
+						logger.info("设定的播放时间小于5秒，可能图像还处于黑色状态，则直接返回改变信息");
+						changedFlg = true;
 					}
 				}
 
@@ -518,11 +531,8 @@ public class MediaLoader {
 			}
 		}
 
-		if (changedFrontFlg) {
-			return true;
-		} else {
-			return false;
-		}
+		logger.info("图像比较的checkStep：{}, 结果：{}", checkStep, changedFrontFlg);
+		return changedFrontFlg;
 	}
 
 	public File saveImage(File toFile) {

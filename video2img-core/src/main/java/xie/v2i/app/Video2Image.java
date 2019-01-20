@@ -215,7 +215,7 @@ public class Video2Image {
 							// 设置截图时间
 							mediaLoader.setTime(time);
 
-							// 进行截图
+							// 等待图像刷新，进行截图
 							while (true) {
 								if (mediaLoader.isRefreshedAfterChangeTime(mediaLoader.getTime())) {
 									// mediaLoader.saveImage();
