@@ -1,24 +1,20 @@
 package study;
 
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
-import uk.co.caprica.vlcj.component.EmbeddedMediaPlayerComponent;
-import uk.co.caprica.vlcj.discovery.NativeDiscovery;
-import uk.co.caprica.vlcj.player.MediaPlayer;
-import uk.co.caprica.vlcj.player.MediaPlayerEventAdapter;
-import uk.co.caprica.vlcj.player.media.Media;
-import uk.co.caprica.vlcj.player.media.callback.nonseekable.FileInputStreamMedia;
+import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery;
+import uk.co.caprica.vlcj.media.callback.CallbackMedia;
+import uk.co.caprica.vlcj.media.callback.nonseekable.FileInputStreamMedia;
+import uk.co.caprica.vlcj.player.base.MediaPlayer;
+import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
+import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent;
+
+
 
 public class UsingJavaIO {
 
@@ -73,58 +69,30 @@ public class UsingJavaIO {
 		controlsPane.add(skipButton);
 		contentPane.add(controlsPane, BorderLayout.SOUTH);
 
-		pauseButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				mediaPlayerComponent.getMediaPlayer().pause();
-			}
-		});
+		pauseButton.addActionListener(e -> mediaPlayerComponent.getMediaPlayer().pause());
 
-		rewindButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				mediaPlayerComponent.getMediaPlayer().skip(-10000);
-			}
-		});
+		rewindButton.addActionListener(e -> mediaPlayerComponent.getMediaPlayer().skip(-10000));
 
-		skipButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				mediaPlayerComponent.getMediaPlayer().skip(10000);
-			}
-		});
+		skipButton.addActionListener(e -> mediaPlayerComponent.getMediaPlayer().skip(10000));
 
 		mediaPlayerComponent.getMediaPlayer().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
 			@Override
 			public void playing(MediaPlayer mediaPlayer) {
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						frame.setTitle(String.format("My First Media Player - %s",
-								mediaPlayerComponent.getMediaPlayer().getMediaMeta().getTitle()));
-					}
-				});
+				SwingUtilities.invokeLater(() -> frame.setTitle(String.format("My First Media Player - %s",
+						mediaPlayerComponent.getMediaPlayer().getMediaMeta().getTitle())));
 			}
 
 			@Override
 			public void finished(MediaPlayer mediaPlayer) {
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						closeWindow();
-					}
-				});
+				SwingUtilities.invokeLater(() -> closeWindow());
 			}
 
 			@Override
 			public void error(MediaPlayer mediaPlayer) {
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						JOptionPane.showMessageDialog(frame, "Failed to play media", "Error",
-								JOptionPane.ERROR_MESSAGE);
-						closeWindow();
-					}
+				SwingUtilities.invokeLater(() -> {
+					JOptionPane.showMessageDialog(frame, "Failed to play media", "Error",
+							JOptionPane.ERROR_MESSAGE);
+					closeWindow();
 				});
 			}
 		});
@@ -136,10 +104,10 @@ public class UsingJavaIO {
 		
 //		Media media = new RandomAccessFileMedia(new File(args));
 //		mediaPlayerComponent.getMediaPlayer().playMedia(media);
-		
-		Media media = new FileInputStreamMedia(new File(args));
+
+		CallbackMedia media = new FileInputStreamMedia(new File(args));
 		mediaPlayerComponent.getMediaPlayer().playMedia(media);
-		
+
 //		Media media = new SimpleMedia(args);
 //		mediaPlayerComponent.getMediaPlayer().playMedia(media);
 	}

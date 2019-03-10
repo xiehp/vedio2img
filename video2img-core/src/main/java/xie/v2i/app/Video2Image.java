@@ -10,8 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sun.jna.NativeLibrary;
 
-import uk.co.caprica.vlcj.binding.LibVlc;
-import uk.co.caprica.vlcj.runtime.RuntimeUtil;
+import uk.co.caprica.vlcj.binding.RuntimeUtil;
 import xie.common.exception.XRuntimeException;
 import xie.common.utils.XWaitTime;
 import xie.v2i.config.Video2ImageProperties;
@@ -134,7 +133,7 @@ public class Video2Image {
 		NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), NATIVE_LIBRARY_SEARCH_PATH);
 		NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), userDir);
 		NativeLibrary.addSearchPath(RuntimeUtil.getLibVlcLibraryName(), "D:\\soft\\vlc\\vlc64");
-		logger.info(LibVlc.INSTANCE.libvlc_get_version());
+//		logger.info(LibVlc.INSTANCE.libvlc_get_version()); // TODO
 	}
 
 	public void run() {
@@ -337,7 +336,7 @@ public class Video2Image {
 				thread.start();
 
 			} catch (Exception e) {
-				logger.debug(e.toString(), e);
+				logger.error(e.toString(), e);
 
 				// closeMediaLoader();
 			}

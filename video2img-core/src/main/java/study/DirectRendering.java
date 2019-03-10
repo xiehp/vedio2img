@@ -1,11 +1,6 @@
 package study;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsEnvironment;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -13,22 +8,11 @@ import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
 import org.apache.log4j.BasicConfigurator;
 
-import uk.co.caprica.vlcj.component.DirectMediaPlayerComponent;
-import uk.co.caprica.vlcj.discovery.NativeDiscovery;
-import uk.co.caprica.vlcj.player.direct.BufferFormat;
-import uk.co.caprica.vlcj.player.direct.BufferFormatCallback;
-import uk.co.caprica.vlcj.player.direct.DirectMediaPlayer;
-import uk.co.caprica.vlcj.player.direct.RenderCallback;
-import uk.co.caprica.vlcj.player.direct.RenderCallbackAdapter;
-import uk.co.caprica.vlcj.player.direct.format.RV32BufferFormat;
+import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery;
 import xie.v2i.utils.CImage;
 
 public class DirectRendering {

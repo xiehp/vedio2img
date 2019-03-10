@@ -28,10 +28,10 @@ public class TestRunVideo {
 			logger.info("begin process animeEpisodeId: " + paramMap);
 
 			Video2ImageDoNotingListener saveImageListener = new Video2ImageDoNotingListener(500);
-			// File fileMrl = new File("F:\\AnimeShotSite\\anime\\2016\\美少女战士\\Crystal\\资源\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB]\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB][1080p x264 AAC][036B4C1E].mp4");
+			 File fileMrl = new File("F:\\AnimeShotSite\\anime\\2016\\美少女战士\\Crystal\\资源\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB]\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB][1080p x264 AAC][036B4C1E].mp4");
 			// File fileMrl = new File("E:\\AnimeShotSIte\\anime\\G\\干物妹！小埋\\[Kamigami] Himouto! Umaru-chan - 05 [1920x1080 x264 AAC Sub(Chs,Cht,Jap)].mkv");
 //			File fileMrl = new File("G:\\video\\[LoliHouse] Violet Evergarden - CM01 [WebRip 1920x1080 HEVC-yuv420p10 AAC ASS].mkv");
-			File fileMrl = new File("M:\\AnimeShotSite\\anime\\Z\\紫罗兰永恒花园\\第一季\\[FLsnow][Violet_Evergarden][Extra_Episode][BDRIP][HEVC_FLACx2][4K-YUV444P12].mkv");
+//			File fileMrl = new File("M:\\AnimeShotSite\\anime\\Z\\紫罗兰永恒花园\\第一季\\[FLsnow][Violet_Evergarden][Extra_Episode][BDRIP][HEVC_FLACx2][4K-YUV444P12].mkv");
 
 
 
