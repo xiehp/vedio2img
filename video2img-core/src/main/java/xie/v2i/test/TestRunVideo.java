@@ -27,11 +27,12 @@ public class TestRunVideo {
 		try {
 			logger.info("begin process animeEpisodeId: " + paramMap);
 
-			Video2ImageDoNotingListener saveImageListener = new Video2ImageDoNotingListener(500);
-			 File fileMrl = new File("F:\\AnimeShotSite\\anime\\2016\\美少女战士\\Crystal\\资源\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB]\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB][1080p x264 AAC][036B4C1E].mp4");
+			Video2ImageDoNotingListener saveImageListener = new Video2ImageDoNotingListener(1000);
+//			 File fileMrl = new File("F:\\AnimeShotSite\\anime\\2016\\美少女战士\\Crystal\\资源\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB]\\[AWS] 美少女战士 Sailor Moon Crystal Ⅲ 28[GB][1080p x264 AAC][036B4C1E].mp4");
 			// File fileMrl = new File("E:\\AnimeShotSIte\\anime\\G\\干物妹！小埋\\[Kamigami] Himouto! Umaru-chan - 05 [1920x1080 x264 AAC Sub(Chs,Cht,Jap)].mkv");
 //			File fileMrl = new File("G:\\video\\[LoliHouse] Violet Evergarden - CM01 [WebRip 1920x1080 HEVC-yuv420p10 AAC ASS].mkv");
 //			File fileMrl = new File("M:\\AnimeShotSite\\anime\\Z\\紫罗兰永恒花园\\第一季\\[FLsnow][Violet_Evergarden][Extra_Episode][BDRIP][HEVC_FLACx2][4K-YUV444P12].mkv");
+			File fileMrl = new File("M:\\AnimeShotSite\\anime\\B\\冰上的尤里\\[Kamigami] Yuri!!! on Ice - 01 [BD 1080p x265 Ma10p AAC].mkv");
 
 
 
@@ -40,7 +41,7 @@ public class TestRunVideo {
 			// video2Image.setRunMode(Video2ImageProperties.RUN_MODE_SPECIAL);
 			Long startTime = null;
 			Long endTime = null;
-			Long interval = 1000L;
+			Long interval = 20000L;
 			if (interval != null) {
 				video2Image.setTimeInterval(interval);
 			}
@@ -51,17 +52,17 @@ public class TestRunVideo {
 				video2Image.setEndTime(endTime);
 			}
 			video2Image.setSpecifyTimes(new long[] { 40000, 40000, 40000 });
-			video2Image.getVideo2ImageProperties().width = 1920 * 2;
-			video2Image.getVideo2ImageProperties().height = 1080 * 2;
-//			 video2Image.getVideo2ImageProperties().width = 1920;
-//			 video2Image.getVideo2ImageProperties().height = 1080;
+//			video2Image.getVideo2ImageProperties().width = 1920 * 2;
+//			video2Image.getVideo2ImageProperties().height = 1080 * 2;
+			 video2Image.getVideo2ImageProperties().width = 1920;
+			 video2Image.getVideo2ImageProperties().height = 1080;
 //			video2Image.getVideo2ImageProperties().width = 640;
 //			video2Image.getVideo2ImageProperties().height = 360;
 
 			video2Image.run();
 
 			while (!video2Image.isClosed()) {
-				Thread.sleep(5000);
+				Thread.sleep(2000);
 			}
 
 			if (video2Image.isProcessSuccess()) {

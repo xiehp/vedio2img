@@ -2,8 +2,6 @@ package xie.v2i.app;
 
 import java.io.File;
 
-import javax.swing.*;
-
 import org.apache.log4j.BasicConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +15,8 @@ import xie.v2i.config.Video2ImageProperties;
 import xie.v2i.core.MediaLoader;
 import xie.v2i.listener.Video2ImageListener;
 
+/**
+ */
 public class Video2Image {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -144,7 +144,7 @@ public class Video2Image {
 		isProcessing = true;
 		isProcessSuccess = false;
 
-		SwingUtilities.invokeLater(() -> {
+//		SwingUtilities.invokeLater(() -> {
 			try {
 				if (!new File(mrl).exists()) {
 					logger.info("文件不存在，" + mrl);
@@ -153,7 +153,7 @@ public class Video2Image {
 
 				mediaLoader = new MediaLoader(mrl, config.width, config.height);
 
-				Thread thread = new Thread(() -> {
+//				Thread thread = new Thread(() -> {
 					try {
 						logger.info("视频截图处理程序开始执行");
 
@@ -241,7 +241,7 @@ public class Video2Image {
 									break;
 								}
 
-								if (mediaLoader.isStoped()) {
+								if (mediaLoader.isStopped()) {
 									logger.warn("mediaLoader 发生了主动停止。");
 									break;
 								}
@@ -331,16 +331,16 @@ public class Video2Image {
 					} finally {
 						closeMediaLoader();
 					}
-				});
+//				});
 
-				thread.start();
+//				thread.start();
 
 			} catch (Exception e) {
 				logger.error(e.toString(), e);
 
 				// closeMediaLoader();
 			}
-		});
+//		});
 	}
 
 	public static void main(String[] args) {
