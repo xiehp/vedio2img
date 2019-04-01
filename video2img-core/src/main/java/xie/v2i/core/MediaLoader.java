@@ -373,6 +373,11 @@ public class MediaLoader {
 
 		for (int i = 0; i < cacheRgb.length; i = i + checkStep) {
 			if (cacheRgb[i] != realRgb[i]) {
+				try {
+					Thread.sleep(200);
+				} catch (InterruptedException e) {
+					logger.warn(e.toString());
+				}
 				changedFrontFlg = true;
 				break;
 			}
@@ -402,7 +407,7 @@ public class MediaLoader {
 	}
 
 	public void setTime(long time) {
-		mediaPlayer.submit(() -> {
+//		mediaPlayer.submit(() -> {
 			logger.info("setTime start: " + time);
 
 			// 改变时间前先复制当前图像
@@ -425,7 +430,7 @@ public class MediaLoader {
 			isOnDisplayTimeoutFlg = false;
 
 			logger.info("setTime end: " + time);
-		});
+//		});
 	}
 
 	public long getTotalTime() {
