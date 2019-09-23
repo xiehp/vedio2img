@@ -32,7 +32,8 @@ public class TestRunVideo {
 			// File fileMrl = new File("E:\\AnimeShotSIte\\anime\\G\\干物妹！小埋\\[Kamigami] Himouto! Umaru-chan - 05 [1920x1080 x264 AAC Sub(Chs,Cht,Jap)].mkv");
 //			File fileMrl = new File("G:\\video\\[LoliHouse] Violet Evergarden - CM01 [WebRip 1920x1080 HEVC-yuv420p10 AAC ASS].mkv");
 //			File fileMrl = new File("M:\\AnimeShotSite\\anime\\Z\\紫罗兰永恒花园\\第一季\\[FLsnow][Violet_Evergarden][Extra_Episode][BDRIP][HEVC_FLACx2][4K-YUV444P12].mkv");
-			File fileMrl = new File("M:\\AnimeShotSite\\anime\\B\\冰上的尤里\\[Kamigami] Yuri!!! on Ice - 01 [BD 1080p x265 Ma10p AAC].mkv");
+//			File fileMrl = new File("M:\\AnimeShotSite\\anime\\B\\冰上的尤里\\[Kamigami] Yuri!!! on Ice - 01 [BD 1080p x265 Ma10p AAC].mkv");
+			File fileMrl = new File("M:\\AnimeShotSite\\anime\\Q\\青春猪头少年不会梦到兔女郎学姐\\第一季\\[DMG&VCB-Studio] Seishun Buta Yarou wa Bunny Girl Senpai no Yume wo Minai [01][Ma10p_1080p][x265_flac].mkv");
 
 
 

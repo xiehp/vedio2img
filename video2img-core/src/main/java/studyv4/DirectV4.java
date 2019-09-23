@@ -181,5 +181,9 @@ public class DirectV4 extends VlcjTest {
       return new RV32BufferFormat(width, height);
     }
 
+    @Override public void allocatedBuffers(ByteBuffer[] buffers) {
+
+    }
+
   }
 }

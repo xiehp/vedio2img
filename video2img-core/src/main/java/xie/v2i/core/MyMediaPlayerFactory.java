@@ -12,6 +12,6 @@ public class MyMediaPlayerFactory extends MediaPlayerFactory {
 	}
 
 	public LibVlc getLibvlc() {
-		return libvlc;
+		return null;
 	}
 }

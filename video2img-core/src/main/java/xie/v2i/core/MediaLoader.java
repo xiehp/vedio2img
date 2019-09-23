@@ -21,10 +21,10 @@ import org.slf4j.LoggerFactory;
 
 import com.sun.jna.NativeLibrary;
 
+import uk.co.caprica.vlcj.binding.LibVlc;
 import uk.co.caprica.vlcj.binding.RuntimeUtil;
 import uk.co.caprica.vlcj.factory.MediaPlayerFactory;
 import uk.co.caprica.vlcj.factory.discovery.NativeDiscovery;
-import uk.co.caprica.vlcj.media.MediaRef;
 import uk.co.caprica.vlcj.player.base.MediaPlayer;
 import uk.co.caprica.vlcj.player.base.MediaPlayerEventAdapter;
 import uk.co.caprica.vlcj.player.component.CallbackMediaPlayerComponent;
@@ -109,7 +109,20 @@ public class MediaLoader {
 				"--intf=dummy"
 		};
 		factory = new MyMediaPlayerFactory(embeddedMediaPlayerArgs);
-		BufferFormatCallback bufferFormatCallback = (sourceWidth, sourceHeight) -> new RV32BufferFormat(width, height);
+
+
+		BufferFormatCallback bufferFormatCallback = new BufferFormatCallback() {
+			@Override
+			public BufferFormat getBufferFormat(int sourceWidth, int sourceHeight) {
+				return new RV32BufferFormat(width, height);
+			}
+
+			@Override
+			public void allocatedBuffers(ByteBuffer[] buffers) {
+
+			}
+		};
+		// BufferFormatCallback bufferFormatCallback = (sourceWidth, sourceHeight) -> new RV32BufferFormat(width, height);
 
 		SwingUtilities.invokeAndWait(() -> {
 			frame = new JFrame("Direct Media Player");
@@ -233,25 +246,18 @@ public class MediaLoader {
 					// }
 
 					@Override
-					public void mediaPlayerReady(MediaPlayer mediaPlayer) {
-						resetTotalTime();
-						mediaPlayer.marquee().enable(false);
-						mediaPlayer.media().info().textTracks().removeAll(mediaPlayer.media().info().textTracks());
-					}
-
-					@Override
 					public void playing(MediaPlayer mediaPlayer) {
 						isStoppedFlg = false;
 					}
-
-					// protected String[] onGetMediaPlayerFactoryExtraArgs() {
-					// return new String[] { "--no-drop-late-frames", "--no-skip-frames", "--sout-ts-use-key-frames", "--grayscale"};
-					// }
 
 					@Override
 					public void paused(MediaPlayer mediaPlayer) {
 						isDoPauseActionFlg = true;
 					}
+
+					// protected String[] onGetMediaPlayerFactoryExtraArgs() {
+					// return new String[] { "--no-drop-late-frames", "--no-skip-frames", "--sout-ts-use-key-frames", "--grayscale"};
+					// }
 
 					@Override
 					public void stopped(MediaPlayer mediaPlayer) {
@@ -261,6 +267,13 @@ public class MediaLoader {
 					@Override
 					public void timeChanged(MediaPlayer mediaPlayer, long newTime) {
 						timeChanged = newTime;
+					}
+
+					@Override
+					public void mediaPlayerReady(MediaPlayer mediaPlayer) {
+						resetTotalTime();
+						mediaPlayer.marquee().enable(false);
+						mediaPlayer.media().info().textTracks().removeAll(mediaPlayer.media().info().textTracks());
 					}
 
 					protected MediaPlayerFactory onGetMediaPlayerFactory() {
@@ -294,8 +307,8 @@ public class MediaLoader {
 				});
 
 		// MyMediaPlayerFactory myMediaPlayerFactory = (MyMediaPlayerFactory) mediaPlayerComponent.mediaPlayerFactory();
-		logger.info("libvlc的版本：{}", factory.getLibvlc().libvlc_get_version());
-		logger.info("使用的解码器：{}", factory.getLibvlc().libvlc_get_compiler());
+		logger.info("libvlc的版本：{}", LibVlc.libvlc_get_version());
+		logger.info("使用的解码器：{}", LibVlc.libvlc_get_compiler());
 
 		frame.setVisible(true);
 		// mediaPlayer = mediaPlayerComponent.mediaPlayer();
@@ -306,6 +319,11 @@ public class MediaLoader {
 		logger.info("接受到暂停命令，向播放器发出暂停命令");
 		mediaPlayer.submit(() -> mediaPlayer.controls().pause());
 		logger.info("暂停成功");
+	}
+
+	public long resetTotalTime() {
+		totalTime = mediaPlayer.media().info().duration();
+		return totalTime;
 	}
 
 	public MediaLoader(String mrl, int width, int height) throws InvocationTargetException, InterruptedException {
@@ -388,10 +406,10 @@ public class MediaLoader {
 	}
 
 	public void dispose() {
-//		mediaPlayer.submit(() -> {
-			frame.dispose();
-			isVideoLoaded = false;
-//		});
+		// mediaPlayer.submit(() -> {
+		frame.dispose();
+		isVideoLoaded = false;
+		// });
 	}
 
 	public BufferedImage getBufferedImage() {
@@ -407,30 +425,30 @@ public class MediaLoader {
 	}
 
 	public void setTime(long time) {
-//		mediaPlayer.submit(() -> {
-			logger.info("setTime start: " + time);
+		// mediaPlayer.submit(() -> {
+		logger.info("setTime start: " + time);
 
-			// 改变时间前先复制当前图像
-			if (!rgbBufferChangedFlg) {
-				// 如果图片没有改变过， 则先将当前图像进行复制
-				if (preRgb == null || preRgb.length != rgbBufferRef.length) {
-					preRgb = new int[rgbBufferRef.length];
-				}
-				System.arraycopy(rgbBufferRef, 0, preRgb, 0, rgbBufferRef.length);
-				logger.info("setTime(), 重新设置了比较rgb数组");
+		// 改变时间前先复制当前图像
+		if (!rgbBufferChangedFlg) {
+			// 如果图片没有改变过， 则先将当前图像进行复制
+			if (preRgb == null || preRgb.length != rgbBufferRef.length) {
+				preRgb = new int[rgbBufferRef.length];
 			}
-			rgbBufferChangedFlg = false;
+			System.arraycopy(rgbBufferRef, 0, preRgb, 0, rgbBufferRef.length);
+			logger.info("setTime(), 重新设置了比较rgb数组");
+		}
+		rgbBufferChangedFlg = false;
 
-			// 设置时间
-			nowSettingTime = time;
-			mediaPlayer.controls().setTime(time);
+		// 设置时间
+		nowSettingTime = time;
+		mediaPlayer.controls().setTime(time);
 
-			// 重置参数
-			xWaitChange.resetCompareValue(time);
-			isOnDisplayTimeoutFlg = false;
+		// 重置参数
+		xWaitChange.resetCompareValue(time);
+		isOnDisplayTimeoutFlg = false;
 
-			logger.info("setTime end: " + time);
-//		});
+		logger.info("setTime end: " + time);
+		// });
 	}
 
 	public long getTotalTime() {
@@ -563,19 +581,14 @@ public class MediaLoader {
 		// TODO mediaLoader.setSpu(-1);
 	}
 
-	public long resetTotalTime() {
-		totalTime = mediaPlayer.media().info().duration();
-		return totalTime;
-	}
-
 	public void release() {
 		// mediaPlayerComponent.release(true); // TODO
 		// mediaPlayerComponent.release();
-//		mediaPlayer.submit(() -> {
-			mediaPlayer.release();
-			factory.release();
-			isVideoLoaded = false;
-//		});
+		// mediaPlayer.submit(() -> {
+		mediaPlayer.release();
+		factory.release();
+		isVideoLoaded = false;
+		// });
 	}
 
 	public File saveImage(File toFile) {
@@ -734,8 +747,8 @@ public class MediaLoader {
 			g2D.setColor(Color.white);
 			lineHeight = 10;
 			if (factory != null) {
-				drawStringLine("vlcVersion: " + factory.getLibvlc().libvlc_get_version());
-				drawStringLine("vlcCompiler: " + factory.getLibvlc().libvlc_get_compiler());
+				drawStringLine("vlcVersion: " + LibVlc.libvlc_get_version());
+				drawStringLine("vlcCompiler: " + LibVlc.libvlc_get_compiler());
 				drawStringLine("jnaLibraryPath: " + Info.getInstance().jnaLibraryPath());
 				drawStringLine("vlcjVersion: " + Info.getInstance().vlcjVersion());
 			}
